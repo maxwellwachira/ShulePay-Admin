@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { api, type Me } from '@renderer/api/client';
+import { api, setOnUnauthorized, type Me } from '@renderer/api/client';
 
 interface AuthState {
   me: Me | null;
@@ -27,6 +27,15 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
       }
       setLoading(false);
     })();
+  }, []);
+
+  // On a 401 (e.g. the token expired), drop the session — the app returns to login.
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      void window.shulepay.auth.clear();
+      setMe(null);
+    });
+    return () => setOnUnauthorized(null);
   }, []);
 
   const login = async (phone: string, password: string): Promise<void> => {

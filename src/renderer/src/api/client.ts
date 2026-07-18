@@ -18,6 +18,13 @@ interface RequestOptions {
   auth?: boolean; // default true
 }
 
+// When an authenticated request returns 401 (e.g. the token expired), the app signs
+// the user out. AuthProvider registers this handler.
+let onUnauthorized: (() => void) | null = null;
+export function setOnUnauthorized(fn: (() => void) | null): void {
+  onUnauthorized = fn;
+}
+
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const res = await window.shulepay.api.request({
     path,
@@ -27,6 +34,7 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   });
   const data = res.data as { error?: { code?: string; message?: string } };
   if (!res.ok) {
+    if (res.status === 401 && opts.auth !== false) onUnauthorized?.();
     throw new ApiError(res.status, data?.error?.code ?? 'error', data?.error?.message ?? 'Request failed');
   }
   return res.data as T;
@@ -71,6 +79,31 @@ export interface OnboardInput {
   guardianName?: string;
 }
 
+export interface MemberDetail {
+  id: string;
+  accountNumber: string;
+  name: string;
+  status: string;
+  balanceCents: number;
+  limits: { period: string; capCents: number }[];
+  guardians: { name: string | null; phone: string }[];
+}
+
+export interface StaffMember {
+  id: string;
+  name: string | null;
+  phone: string;
+  role: string;
+  createdAt: string;
+}
+
+export interface Terminal {
+  id: string;
+  label: string;
+  status: string;
+  createdAt: string;
+}
+
 export const api = {
   login: (phone: string, password: string) =>
     request<LoginResponse>('/v1/auth/login', { method: 'POST', body: { phone, password }, auth: false }),
@@ -89,11 +122,29 @@ export const api = {
       { method: 'POST', body },
     ),
 
+  memberDetail: (memberId: string) => request<MemberDetail>(`/v1/members/${memberId}`),
+
+  setLimit: (memberId: string, period: 'daily' | 'weekly', capCents: number) =>
+    request<{ memberId: string; period: string; capCents: number }>(
+      `/v1/members/${memberId}/limits`,
+      { method: 'PUT', body: { period, capCents } },
+    ),
+
+  listStaff: (orgId: string) => request<{ users: StaffMember[] }>(`/v1/orgs/${orgId}/users`),
+
   createUser: (orgId: string, body: { phone: string; name: string; password: string; role: 'admin' | 'cashier' }) =>
     request<{ id: string; phone: string; name: string; role: string }>(
       `/v1/orgs/${orgId}/users`,
       { method: 'POST', body },
     ),
+
+  listTerminals: (orgId: string) => request<{ terminals: Terminal[] }>(`/v1/orgs/${orgId}/terminals`),
+
+  registerTerminal: (orgId: string, label: string) =>
+    request<{ id: string; label: string; apiKey: string }>(`/v1/orgs/${orgId}/terminals`, {
+      method: 'POST',
+      body: { label },
+    }),
 
   enrollFingerprint: (
     memberId: string,

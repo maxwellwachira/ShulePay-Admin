@@ -1,7 +1,7 @@
 import { Logo } from './Logo';
 import { useAuth } from '@renderer/auth/useAuth';
 import { IconSignOut } from './icons';
-import { NAV_ITEMS, type View } from './nav';
+import { NAV_ITEMS, NAV_GROUPS, type View } from './nav';
 
 export function Sidebar({
   active,
@@ -13,8 +13,6 @@ export function Sidebar({
   const { me, logout } = useAuth();
   const initials = (me?.name ?? me?.org?.name ?? 'S').trim().charAt(0).toUpperCase();
 
-  const groups = ['School', 'Finance'] as const;
-
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
@@ -22,7 +20,7 @@ export function Sidebar({
       </div>
 
       <nav className="nav">
-        {groups.map((group) => (
+        {NAV_GROUPS.map((group) => (
           <div key={group}>
             <div className="nav-label">{group}</div>
             {NAV_ITEMS.filter((i) => i.group === group).map((item) => {

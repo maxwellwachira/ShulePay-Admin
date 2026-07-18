@@ -7,6 +7,8 @@ import { Students } from './Students';
 import { Onboard } from './Onboard';
 import { Staff } from './Staff';
 import { Transactions } from './Transactions';
+import { Terminals } from './Terminals';
+import { Settings } from './Settings';
 
 function NoOrg(): JSX.Element {
   return (
@@ -45,8 +47,12 @@ export function Console(): JSX.Element {
               <Onboard orgId={orgId} />
             ) : view === 'staff' ? (
               <Staff orgId={orgId} />
-            ) : (
+            ) : view === 'transactions' ? (
               <Transactions orgId={orgId} />
+            ) : view === 'terminals' ? (
+              <Terminals orgId={orgId} />
+            ) : (
+              <Settings />
             )}
           </div>
         </div>

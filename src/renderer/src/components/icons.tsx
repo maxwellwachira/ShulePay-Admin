@@ -71,6 +71,13 @@ export const IconStaff = ({ className }: P): JSX.Element => (
   </svg>
 );
 
+export const IconSettings = ({ className }: P): JSX.Element => (
+  <svg {...base} className={className}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" />
+  </svg>
+);
+
 export const IconFingerprint = ({ className }: P): JSX.Element => (
   <svg {...base} className={className}>
     <path d="M12 11a2 2 0 0 1 2 2c0 2-.2 4-1 6" />

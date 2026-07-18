@@ -12,7 +12,17 @@
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "dist": "npm run build && electron-builder"
+  },
+  "build": {
+    "appId": "ke.shulepay.admin",
+    "productName": "ShulePay Admin",
+    "directories": { "output": "release", "buildResources": "build-resources" },
+    "files": ["out/**/*", "package.json"],
+    "mac": { "category": "public.app-category.business", "target": ["dmg"] },
+    "win": { "target": ["nsis"] },
+    "linux": { "target": ["AppImage"], "category": "Office" }
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0"
@@ -26,6 +36,7 @@
     "@typescript-eslint/parser": "^8.18.0",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
     "eslint": "^9.17.0",
     "eslint-plugin-react-hooks": "^5.1.0",
