@@ -1,14 +1,6 @@
-import type { AppConfig } from '@shared/bridge';
-
-/** Typed client for the ShulePay backend. The bearer token is fetched from the main
- * process (OS keychain) per request — the renderer never holds it in JS state or
- * localStorage. */
-
-let cachedConfig: AppConfig | null = null;
-async function baseUrl(): Promise<string> {
-  cachedConfig ??= await window.shulepay.app.getConfig();
-  return cachedConfig.apiBaseUrl;
-}
+/** Typed client for the ShulePay backend. Requests are performed by the MAIN process
+ * (via the bridge) — no browser CORS, and the token is injected there, never held in
+ * the renderer. */
 
 export class ApiError extends Error {
   constructor(
@@ -27,23 +19,17 @@ interface RequestOptions {
 }
 
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (opts.auth !== false) {
-    const token = await window.shulepay.auth.getToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-  }
-  const res = await fetch(`${await baseUrl()}${path}`, {
-    method: opts.method ?? 'GET',
-    headers,
-    body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+  const res = await window.shulepay.api.request({
+    path,
+    ...(opts.method ? { method: opts.method } : {}),
+    ...(opts.body !== undefined ? { body: opts.body } : {}),
+    ...(opts.auth !== undefined ? { auth: opts.auth } : {}),
   });
-  const data = (await res.json().catch(() => ({}))) as {
-    error?: { code?: string; message?: string };
-  };
+  const data = res.data as { error?: { code?: string; message?: string } };
   if (!res.ok) {
-    throw new ApiError(res.status, data.error?.code ?? 'error', data.error?.message ?? res.statusText);
+    throw new ApiError(res.status, data?.error?.code ?? 'error', data?.error?.message ?? 'Request failed');
   }
-  return data as T;
+  return res.data as T;
 }
 
 export interface LoginResponse {

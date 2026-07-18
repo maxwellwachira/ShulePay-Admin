@@ -7,6 +7,9 @@ import { IPC, type ShulePayBridge } from '@shared/bridge';
  * ipcRenderer, no Node — so the renderer can never reach anything not listed here.
  */
 const bridge: ShulePayBridge = {
+  api: {
+    request: (req) => ipcRenderer.invoke(IPC.apiRequest, req),
+  },
   auth: {
     setToken: (token) => ipcRenderer.invoke(IPC.authSetToken, token),
     getToken: () => ipcRenderer.invoke(IPC.authGetToken),
