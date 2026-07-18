@@ -37,13 +37,61 @@ export interface LoginResponse {
   user: { id: string; role: string; name: string | null };
 }
 
+export interface Me {
+  id: string;
+  role: string;
+  name: string | null;
+  phone: string;
+  orgId: string | null;
+  org: { id: string; name: string } | null;
+}
+
+export interface StudentSummary {
+  id: string;
+  accountNumber: string;
+  name: string;
+  status: string;
+  balanceCents: number;
+}
+
+export interface OrgTxn {
+  id: string;
+  kind: string;
+  createdAt: string;
+  reference: string | null;
+  memberName: string;
+  accountNumber: string;
+  amountCents: number;
+}
+
+export interface OnboardInput {
+  externalRef: string;
+  name: string;
+  guardianPhone?: string;
+  guardianName?: string;
+}
+
 export const api = {
   login: (phone: string, password: string) =>
     request<LoginResponse>('/v1/auth/login', { method: 'POST', body: { phone, password }, auth: false }),
 
-  onboardMember: (orgId: string, body: { externalRef: string; name: string }) =>
-    request<{ id: string; accountNumber: string; name: string; walletAccountId: string }>(
+  me: () => request<Me>('/v1/me'),
+
+  listStudents: (orgId: string) =>
+    request<{ count: number; members: StudentSummary[] }>(`/v1/orgs/${orgId}/members`),
+
+  transactions: (orgId: string) =>
+    request<{ transactions: OrgTxn[] }>(`/v1/orgs/${orgId}/transactions`),
+
+  onboardMember: (orgId: string, body: OnboardInput) =>
+    request<{ id: string; accountNumber: string; name: string; guardianUserId: string | null }>(
       `/v1/orgs/${orgId}/members`,
+      { method: 'POST', body },
+    ),
+
+  createUser: (orgId: string, body: { phone: string; name: string; password: string; role: 'admin' | 'cashier' }) =>
+    request<{ id: string; phone: string; name: string; role: string }>(
+      `/v1/orgs/${orgId}/users`,
       { method: 'POST', body },
     ),
 
@@ -55,9 +103,9 @@ export const api = {
       `/v1/members/${memberId}/biometrics`,
       { method: 'POST', body },
     ),
-
-  balance: (memberId: string) =>
-    request<{ memberId: string; balanceCents: number; balanceKes: string }>(
-      `/v1/members/${memberId}/balance`,
-    ),
 };
+
+/** Format integer cents as "KES 1,234.50". */
+export function formatKes(cents: number): string {
+  return `KES ${(cents / 100).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}

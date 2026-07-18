@@ -1,10 +1,19 @@
 import { Logo } from './Logo';
 import { useAuth } from '@renderer/auth/useAuth';
-import { IconOnboard, IconStudents, IconTerminals, IconReconcile, IconSignOut } from './icons';
+import { IconSignOut } from './icons';
+import { NAV_ITEMS, type View } from './nav';
 
-export function Sidebar(): JSX.Element {
-  const { user, logout } = useAuth();
-  const initials = (user?.name ?? 'Admin').trim().charAt(0).toUpperCase();
+export function Sidebar({
+  active,
+  onNavigate,
+}: {
+  active: View;
+  onNavigate: (v: View) => void;
+}): JSX.Element {
+  const { me, logout } = useAuth();
+  const initials = (me?.name ?? me?.org?.name ?? 'S').trim().charAt(0).toUpperCase();
+
+  const groups = ['School', 'Finance'] as const;
 
   return (
     <aside className="sidebar">
@@ -13,29 +22,31 @@ export function Sidebar(): JSX.Element {
       </div>
 
       <nav className="nav">
-        <div className="nav-label">Manage</div>
-        <button className="nav-item active">
-          <IconOnboard className="ic" /> Onboarding
-        </button>
-        <button className="nav-item" disabled>
-          <IconStudents className="ic" /> Students <span className="nav-soon">Soon</span>
-        </button>
-        <button className="nav-item" disabled>
-          <IconTerminals className="ic" /> Terminals <span className="nav-soon">Soon</span>
-        </button>
-
-        <div className="nav-label">Finance</div>
-        <button className="nav-item" disabled>
-          <IconReconcile className="ic" /> Reconciliation <span className="nav-soon">Soon</span>
-        </button>
+        {groups.map((group) => (
+          <div key={group}>
+            <div className="nav-label">{group}</div>
+            {NAV_ITEMS.filter((i) => i.group === group).map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.view}
+                  className={`nav-item ${active === item.view ? 'active' : ''}`}
+                  onClick={() => onNavigate(item.view)}
+                >
+                  <Icon className="ic" /> {item.label}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="sidebar-foot">
         <div className="user">
           <div className="avatar">{initials}</div>
           <div className="user-meta">
-            <span className="user-name">{user?.name ?? 'Administrator'}</span>
-            <span className="user-role">{user?.role ?? 'admin'}</span>
+            <span className="user-name">{me?.org?.name ?? 'School'}</span>
+            <span className="user-role">{me?.name ?? me?.role}</span>
           </div>
         </div>
         <button className="nav-item" onClick={() => void logout()}>

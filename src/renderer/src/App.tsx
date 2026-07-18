@@ -1,9 +1,9 @@
 import { useAuth } from '@renderer/auth/useAuth';
 import { Login } from '@renderer/pages/Login';
-import { Dashboard } from '@renderer/pages/Dashboard';
+import { Console } from '@renderer/pages/Console';
 
 export function App(): JSX.Element {
-  const { user, loading } = useAuth();
+  const { me, loading } = useAuth();
   if (loading) {
     return (
       <div className="auth">
@@ -11,5 +11,5 @@ export function App(): JSX.Element {
       </div>
     );
   }
-  return user ? <Dashboard /> : <Login />;
+  return me ? <Console /> : <Login />;
 }

@@ -48,6 +48,29 @@ export const IconSignOut = ({ className }: P): JSX.Element => (
   </svg>
 );
 
+export const IconHome = ({ className }: P): JSX.Element => (
+  <svg {...base} className={className}>
+    <path d="M3 10.5 12 3l9 7.5" />
+    <path d="M5 9.5V21h14V9.5" />
+    <path d="M9 21v-6h6v6" />
+  </svg>
+);
+
+export const IconReceipt = ({ className }: P): JSX.Element => (
+  <svg {...base} className={className}>
+    <path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2V3z" />
+    <path d="M9 8h6M9 12h6" />
+  </svg>
+);
+
+export const IconStaff = ({ className }: P): JSX.Element => (
+  <svg {...base} className={className}>
+    <circle cx="9" cy="7" r="3.2" />
+    <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
+    <path d="M17 8.5l1.2 1.2L21 7" />
+  </svg>
+);
+
 export const IconFingerprint = ({ className }: P): JSX.Element => (
   <svg {...base} className={className}>
     <path d="M12 11a2 2 0 0 1 2 2c0 2-.2 4-1 6" />

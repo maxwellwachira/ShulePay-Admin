@@ -1,10 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { api, type LoginResponse } from '@renderer/api/client';
-
-type User = LoginResponse['user'];
+import { api, type Me } from '@renderer/api/client';
 
 interface AuthState {
-  user: User | null;
+  me: Me | null;
   loading: boolean;
   login: (phone: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -13,35 +11,36 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }): JSX.Element {
-  const [user, setUser] = useState<User | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Restore a session on launch if a token is already in the keychain.
+  // Restore a session on launch: if a token is in the keychain, load the profile.
   useEffect(() => {
-    void window.shulepay.auth.getToken().then((token) => {
-      // A present token means a prior login; the backend re-validates on first call.
-      // (A production build would verify via a /me endpoint before trusting it.)
-      if (token) setUser({ id: 'me', role: 'admin', name: null });
+    void (async () => {
+      const token = await window.shulepay.auth.getToken();
+      if (token) {
+        try {
+          setMe(await api.me());
+        } catch {
+          await window.shulepay.auth.clear();
+        }
+      }
       setLoading(false);
-    });
+    })();
   }, []);
 
   const login = async (phone: string, password: string): Promise<void> => {
     const res = await api.login(phone, password);
     await window.shulepay.auth.setToken(res.accessToken);
-    setUser(res.user);
+    setMe(await api.me());
   };
 
   const logout = async (): Promise<void> => {
     await window.shulepay.auth.clear();
-    setUser(null);
+    setMe(null);
   };
 
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ me, loading, login, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthState {

@@ -201,3 +201,42 @@ button, input { font-family: inherit; font-size: inherit; }
 
 .form-grid { display: flex; flex-direction: column; gap: 16px; }
 .form-actions { margin-top: 4px; }
+
+/* ---- Stat cards ---------------------------------------------------------- */
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.stat {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px 20px; box-shadow: var(--shadow-sm);
+}
+.stat-label {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-muted); font-size: 12.5px; font-weight: 600;
+}
+.stat-label .ic { width: 15px; height: 15px; color: var(--primary); }
+.stat-value { font-size: 27px; font-weight: 700; margin-top: 8px; letter-spacing: -0.02em; }
+.stat-sub { color: var(--text-faint); font-size: 12px; margin-top: 2px; }
+
+/* ---- Tables -------------------------------------------------------------- */
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-faint); font-weight: 700; padding: 12px 20px;
+  border-bottom: 1px solid var(--border); background: var(--surface-2);
+}
+.table td { padding: 13px 20px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+.table tr:last-child td { border-bottom: none; }
+.table td.right, .table th.right { text-align: right; }
+.table .strong { font-weight: 600; }
+.amount-pos { color: var(--success); font-weight: 600; }
+.amount-neg { color: var(--text); font-weight: 600; }
+.kind { text-transform: capitalize; }
+.mono { font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.empty { padding: 34px 20px; text-align: center; color: var(--text-muted); }
+
+.section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.section-head h1 { font-size: 21px; }
+.section-head .spacer { flex: 1; }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dot-active { background: var(--success); }
+.dot-idle { background: var(--text-faint); }
