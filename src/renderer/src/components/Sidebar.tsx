@@ -16,7 +16,7 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <Logo size={34} />
+        <Logo size={34} onDark />
       </div>
 
       <nav className="nav">

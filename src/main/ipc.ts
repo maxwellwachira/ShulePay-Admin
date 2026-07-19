@@ -6,7 +6,7 @@ import { apiRequest } from './api';
 
 /**
  * Registers the privileged handlers the renderer may invoke. This is the whole trust
- * boundary — nothing else in the main process is reachable from the UI. Handlers
+ * boundary - nothing else in the main process is reachable from the UI. Handlers
  * validate their inputs and keep secrets (the token) in the main process.
  */
 export function registerIpc(): void {

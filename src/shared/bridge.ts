@@ -1,7 +1,7 @@
 /**
  * The typed contract for the ONLY surface the renderer can touch in the main process.
  * Shared by main (implements), preload (exposes via contextBridge), and renderer
- * (consumes as `window.shulepay`). Keep it minimal — every method here is privileged.
+ * (consumes as `window.shulepay`). Keep it minimal - every method here is privileged.
  */
 
 export interface CaptureResult {
@@ -27,7 +27,7 @@ export interface ApiResponse {
 
 export interface ShulePayBridge {
   /**
-   * All backend HTTP goes through the MAIN process (Node) — no browser CORS, and the
+   * All backend HTTP goes through the MAIN process (Node) - no browser CORS, and the
    * token is injected in main so it never reaches the renderer.
    */
   api: {
@@ -39,7 +39,7 @@ export interface ShulePayBridge {
     getToken(): Promise<string | null>;
     clear(): Promise<void>;
   };
-  /** Fingerprint reader — native SDK runs in main; renderer only gets a template. */
+  /** Fingerprint reader - native SDK runs in main; renderer only gets a template. */
   fingerprint: {
     capture(): Promise<CaptureResult>;
   };
@@ -48,7 +48,7 @@ export interface ShulePayBridge {
   };
 }
 
-/** IPC channel names — the single source of truth for both ends. */
+/** IPC channel names - the single source of truth for both ends. */
 export const IPC = {
   apiRequest: 'api:request',
   authSetToken: 'auth:setToken',

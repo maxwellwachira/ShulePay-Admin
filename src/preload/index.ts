@@ -3,8 +3,8 @@ import { IPC, type ShulePayBridge } from '@shared/bridge';
 
 /**
  * The preload runs in an isolated context and is the ONLY code that can talk to both
- * Electron and the page. It exposes a small, typed API on `window.shulepay` — no raw
- * ipcRenderer, no Node — so the renderer can never reach anything not listed here.
+ * Electron and the page. It exposes a small, typed API on `window.shulepay` - no raw
+ * ipcRenderer, no Node - so the renderer can never reach anything not listed here.
  */
 const bridge: ShulePayBridge = {
   api: {

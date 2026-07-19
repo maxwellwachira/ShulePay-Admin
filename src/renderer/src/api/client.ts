@@ -1,5 +1,5 @@
 /** Typed client for the ShulePay backend. Requests are performed by the MAIN process
- * (via the bridge) — no browser CORS, and the token is injected there, never held in
+ * (via the bridge) - no browser CORS, and the token is injected there, never held in
  * the renderer. */
 
 export class ApiError extends Error {

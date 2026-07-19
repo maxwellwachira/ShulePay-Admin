@@ -4,15 +4,19 @@ import { registerIpc } from './ipc';
 
 /**
  * Main process. Security posture (Electron hardening best practices):
- *  - contextIsolation ON, nodeIntegration OFF, sandbox ON — the renderer is a plain
+ *  - contextIsolation ON, nodeIntegration OFF, sandbox ON - the renderer is a plain
  *    web page with no Node access; it reaches the OS only through the typed preload.
  *  - external links open in the OS browser, never in-app.
  *  - navigation is locked to our own content.
  */
 function createWindow(): void {
   const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1280,
+    height: 832,
+    minWidth: 1000,
+    minHeight: 640,
+    title: 'ShulePay Admin',
+    backgroundColor: '#f6f8fb',
     show: false,
     autoHideMenuBar: true,
     webPreferences: {

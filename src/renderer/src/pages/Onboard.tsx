@@ -1,43 +1,82 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@renderer/api/client';
-import { IconFingerprint } from '@renderer/components/icons';
+import { useToast } from '@renderer/components/Toast';
+import { IconFingerprint, IconCheck } from '@renderer/components/icons';
 import type { CaptureResult } from '@shared/bridge';
 
 const CONSENT_VERSION = 'guardian-consent-2026-v1';
 const MIN_QUALITY = 40;
 
+/** Normalize a Kenyan phone number to 254XXXXXXXXX, or return null if invalid. */
+function normalizePhone(raw: string): string | null {
+  const s = raw.replace(/[\s\-+]/g, '');
+  if (/^0[17]\d{8}$/.test(s)) return `254${s.slice(1)}`;
+  if (/^254[17]\d{8}$/.test(s)) return s;
+  if (/^[17]\d{8}$/.test(s)) return `254${s}`;
+  return null;
+}
+
+type Step = 1 | 2 | 3;
+
+function Stepper({ step }: { step: Step }): JSX.Element {
+  const steps = ['Student details', 'Fingerprint', 'Done'];
+  return (
+    <div className="stepper">
+      {steps.map((name, i) => {
+        const n = (i + 1) as Step;
+        const state = n < step ? 'done' : n === step ? 'current' : '';
+        return (
+          <div key={name} style={{ display: 'contents' }}>
+            {i > 0 && <div className={`step-line ${n <= step ? 'done' : ''}`} />}
+            <div className={`step ${state}`}>
+              <div className="step-dot">{n < step ? <IconCheck className="ic" /> : n}</div>
+              <div className="step-name">{name}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Onboard({ orgId }: { orgId: string }): JSX.Element {
   const qc = useQueryClient();
+  const toast = useToast();
+
+  const [step, setStep] = useState<Step>(1);
   const [name, setName] = useState('');
   const [admission, setAdmission] = useState('');
   const [guardianPhone, setGuardianPhone] = useState('');
   const [guardianName, setGuardianName] = useState('');
-  const [memberId, setMemberId] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const [student, setStudent] = useState<{ id: string; name: string; accountNumber: string } | null>(null);
   const [capture, setCapture] = useState<CaptureResult | null>(null);
+  const [scanning, setScanning] = useState(false);
   const [consent, setConsent] = useState(false);
-  const [notice, setNotice] = useState<{ kind: 'ok' | 'info' | 'err'; text: string } | null>(null);
+  const [enrolled, setEnrolled] = useState(false);
 
   const onboard = useMutation({
-    mutationFn: () =>
+    mutationFn: (phone: string) =>
       api.onboardMember(orgId, {
-        name,
-        externalRef: admission,
-        ...(guardianPhone ? { guardianPhone } : {}),
-        ...(guardianName ? { guardianName } : {}),
+        name: name.trim(),
+        externalRef: admission.trim(),
+        guardianPhone: phone,
+        ...(guardianName.trim() ? { guardianName: guardianName.trim() } : {}),
       }),
     onSuccess: (m) => {
-      setMemberId(m.id);
+      setStudent({ id: m.id, name: m.name, accountNumber: m.accountNumber });
       void qc.invalidateQueries({ queryKey: ['students', orgId] });
-      setNotice({ kind: 'info', text: `${m.name} created (${m.accountNumber}). Now enroll a fingerprint.` });
+      setStep(2);
     },
-    onError: (e) => setNotice({ kind: 'err', text: e instanceof ApiError ? e.message : 'Onboarding failed' }),
+    onError: (e) => toast.push('err', e instanceof ApiError ? e.message : 'Onboarding failed'),
   });
 
   const enroll = useMutation({
     mutationFn: () => {
-      if (!memberId || !capture) throw new Error('capture first');
-      return api.enrollFingerprint(memberId, {
+      if (!student || !capture) throw new Error('capture first');
+      return api.enrollFingerprint(student.id, {
         fingerIndex: 1,
         template: capture.template,
         quality: capture.quality,
@@ -45,91 +84,200 @@ export function Onboard({ orgId }: { orgId: string }): JSX.Element {
         consentVersion: CONSENT_VERSION,
       });
     },
-    onSuccess: () => setNotice({ kind: 'ok', text: 'Fingerprint enrolled — the student is ready.' }),
-    onError: (e) => setNotice({ kind: 'err', text: e instanceof ApiError ? e.message : 'Enrollment failed' }),
+    onSuccess: () => {
+      setEnrolled(true);
+      setStep(3);
+    },
+    onError: (e) => toast.push('err', e instanceof ApiError ? e.message : 'Enrollment failed'),
   });
 
-  function reset(): void {
-    setName(''); setAdmission(''); setGuardianPhone(''); setGuardianName('');
-    setMemberId(null); setCapture(null); setConsent(false); setNotice(null);
-  }
-  async function scan(): Promise<void> {
-    setCapture(await window.shulepay.fingerprint.capture());
-  }
-  function submit(e: FormEvent): void {
+  function submitDetails(e: FormEvent): void {
     e.preventDefault();
-    onboard.mutate();
+    const errors: Record<string, string> = {};
+    if (!name.trim()) errors.name = 'Student name is required.';
+    if (!admission.trim()) errors.admission = 'Admission number is required.';
+    const phone = normalizePhone(guardianPhone);
+    if (!phone) errors.phone = 'Enter a valid Kenyan number, e.g. 0712 345 678.';
+    setFieldErrors(errors);
+    if (Object.keys(errors).length === 0 && phone) onboard.mutate(phone);
+  }
+
+  async function scan(): Promise<void> {
+    setScanning(true);
+    try {
+      setCapture(await window.shulepay.fingerprint.capture());
+    } catch {
+      toast.push('err', 'Could not reach the fingerprint reader. Check the device and try again.');
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  function reset(): void {
+    setStep(1);
+    setName('');
+    setAdmission('');
+    setGuardianPhone('');
+    setGuardianName('');
+    setFieldErrors({});
+    setStudent(null);
+    setCapture(null);
+    setConsent(false);
+    setEnrolled(false);
   }
 
   const goodQuality = (capture?.quality ?? 0) >= MIN_QUALITY;
-  const done = enroll.isSuccess;
 
   return (
     <div className="card">
-      <div className="card-head">
-        <h2>Onboard a student</h2>
-        <p>Capture the student's details, parent's phone, and fingerprint.</p>
-      </div>
       <div className="card-body">
-        <form className="form-grid" onSubmit={submit}>
-          <div className="field">
-            <label>Student name</label>
-            <input className="input" placeholder="Grace Njeri" value={name} disabled={!!memberId}
-              onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>Admission number</label>
-            <input className="input" placeholder="ADM-2024-001" value={admission} disabled={!!memberId}
-              onChange={(e) => setAdmission(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>Parent / guardian phone</label>
-            <input className="input" placeholder="2547…" value={guardianPhone} disabled={!!memberId}
-              onChange={(e) => setGuardianPhone(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>Parent / guardian name <span className="muted">(optional)</span></label>
-            <input className="input" placeholder="Mama Grace" value={guardianName} disabled={!!memberId}
-              onChange={(e) => setGuardianName(e.target.value)} />
-          </div>
-          {!memberId && (
-            <div className="form-actions">
-              <button className="btn btn-primary" disabled={onboard.isPending || !name || !admission || !guardianPhone}>
-                {onboard.isPending ? 'Creating…' : 'Create student'}
-              </button>
-            </div>
-          )}
-        </form>
+        <Stepper step={step} />
 
-        {memberId && (
-          <div className="enroll">
-            <h3><IconFingerprint className="ic" /> Biometric enrollment</h3>
-            <div className="scan-row">
-              <button type="button" className="btn btn-secondary" onClick={() => void scan()} disabled={done}>
-                {capture ? 'Re-scan' : 'Scan fingerprint'}
-              </button>
-              {capture && (
-                <span className={`quality-pill ${goodQuality ? 'badge-ok' : 'badge-warn'}`}>
-                  Quality {capture.quality}{!goodQuality && ' · too low'}
-                </span>
+        {step === 1 && (
+          <form className="form-grid cols" onSubmit={submitDetails} noValidate>
+            <div className="field">
+              <label htmlFor="ob-name">Student name</label>
+              <input
+                id="ob-name"
+                className={`input ${fieldErrors.name ? 'invalid' : ''}`}
+                placeholder="Grace Njeri"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+              />
+              {fieldErrors.name && <span className="field-error">{fieldErrors.name}</span>}
+            </div>
+            <div className="field">
+              <label htmlFor="ob-adm">Admission number</label>
+              <input
+                id="ob-adm"
+                className={`input ${fieldErrors.admission ? 'invalid' : ''}`}
+                placeholder="ADM-2026-001"
+                value={admission}
+                onChange={(e) => setAdmission(e.target.value)}
+              />
+              {fieldErrors.admission && <span className="field-error">{fieldErrors.admission}</span>}
+            </div>
+            <div className="field">
+              <label htmlFor="ob-gphone">Parent / guardian phone</label>
+              <input
+                id="ob-gphone"
+                className={`input ${fieldErrors.phone ? 'invalid' : ''}`}
+                placeholder="0712 345 678"
+                inputMode="tel"
+                value={guardianPhone}
+                onChange={(e) => setGuardianPhone(e.target.value)}
+              />
+              {fieldErrors.phone ? (
+                <span className="field-error">{fieldErrors.phone}</span>
+              ) : (
+                <span className="field-hint">The guardian tops up and gets receipts on this number.</span>
               )}
             </div>
+            <div className="field">
+              <label htmlFor="ob-gname">
+                Parent / guardian name <span className="muted">(optional)</span>
+              </label>
+              <input
+                id="ob-gname"
+                className="input"
+                placeholder="Mary Njeri"
+                value={guardianName}
+                onChange={(e) => setGuardianName(e.target.value)}
+              />
+            </div>
+            <div className="form-actions">
+              <button className="btn btn-primary" disabled={onboard.isPending}>
+                {onboard.isPending ? 'Creating…' : 'Continue to fingerprint'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === 2 && student && (
+          <div className="stack">
+            <div className="notice notice-info">
+              {student.name} created with account <strong>{student.accountNumber}</strong>. Now enroll
+              their fingerprint so they can pay at the till.
+            </div>
+
+            <div className="scanpad">
+              <div
+                className={`scan-visual ${scanning ? 'scanning' : capture ? 'captured' : ''}`}
+                aria-hidden="true"
+              >
+                {capture && !scanning ? <IconCheck className="ic" /> : <IconFingerprint className="ic" />}
+              </div>
+              <div className="scan-status" role="status">
+                {scanning
+                  ? 'Scanning. Ask the student to hold their finger on the reader…'
+                  : capture
+                    ? goodQuality
+                      ? 'Good capture. You can enroll or re-scan.'
+                      : 'Capture quality is too low. Clean the finger and reader, then re-scan.'
+                    : 'Place the student’s right index finger on the reader.'}
+              </div>
+              <div className="row">
+                <button
+                  type="button"
+                  className={capture ? 'btn btn-secondary' : 'btn btn-primary'}
+                  onClick={() => void scan()}
+                  disabled={scanning}
+                >
+                  {scanning ? 'Scanning…' : capture ? 'Re-scan' : 'Scan fingerprint'}
+                </button>
+                {capture && !scanning && (
+                  <span className={`quality-pill ${goodQuality ? 'badge-ok' : 'badge-warn'}`}>
+                    Quality {capture.quality}
+                    {!goodQuality && ' · too low'}
+                  </span>
+                )}
+              </div>
+            </div>
+
             <label className="checkbox">
-              <input type="checkbox" checked={consent} disabled={done} onChange={(e) => setConsent(e.target.checked)} />
-              Guardian consent recorded ({CONSENT_VERSION})
+              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+              <span>
+                The parent or guardian has consented to biometric enrollment for school payments
+                <span className="muted"> ({CONSENT_VERSION})</span>.
+              </span>
             </label>
-            <div className="row" style={{ marginTop: 14 }}>
-              <button type="button" className="btn btn-primary"
-                disabled={enroll.isPending || done || !capture || !consent || !goodQuality}
-                onClick={() => enroll.mutate()}>
+
+            <div className="row">
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={enroll.isPending || !capture || !consent || !goodQuality || scanning}
+                onClick={() => enroll.mutate()}
+              >
                 {enroll.isPending ? 'Enrolling…' : 'Enroll fingerprint'}
               </button>
-              {done && <button type="button" className="btn btn-secondary" onClick={reset}>Onboard another</button>}
+              <button type="button" className="btn btn-ghost" onClick={() => setStep(3)}>
+                Skip for now
+              </button>
             </div>
           </div>
         )}
 
-        {notice && <div className={`notice notice-${notice.kind}`}>{notice.text}</div>}
+        {step === 3 && student && (
+          <div className="done-panel">
+            <div className="done-badge">
+              <IconCheck className="ic" />
+            </div>
+            <h2>{student.name} is onboarded</h2>
+            <p className="muted">
+              Account <strong className="mono">{student.accountNumber}</strong>
+              {enrolled
+                ? '. Fingerprint enrolled and ready to pay.'
+                : '. No fingerprint yet; they can be enrolled later.'}
+            </p>
+            <div className="row" style={{ marginTop: 16 }}>
+              <button className="btn btn-primary" onClick={reset}>
+                Onboard another student
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

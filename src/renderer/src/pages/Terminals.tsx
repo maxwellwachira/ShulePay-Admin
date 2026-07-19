@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@renderer/api/client';
 import { useToast } from '@renderer/components/Toast';
+import { SkeletonRows, ErrorState, EmptyState, CopyButton } from '@renderer/components/ui';
+import { IconTerminals, IconAlert, IconRefresh } from '@renderer/components/icons';
 
 export function Terminals({ orgId }: { orgId: string }): JSX.Element {
   const qc = useQueryClient();
@@ -11,7 +13,7 @@ export function Terminals({ orgId }: { orgId: string }): JSX.Element {
   const [newKey, setNewKey] = useState<{ label: string; apiKey: string } | null>(null);
 
   const register = useMutation({
-    mutationFn: () => api.registerTerminal(orgId, label),
+    mutationFn: () => api.registerTerminal(orgId, label.trim()),
     onSuccess: (t) => {
       setNewKey({ label: t.label, apiKey: t.apiKey });
       setLabel('');
@@ -31,40 +33,75 @@ export function Terminals({ orgId }: { orgId: string }): JSX.Element {
       <div className="card">
         <div className="card-head">
           <h2>Register a POS terminal</h2>
-          <p>Each till/canteen device gets its own key. The key is shown once — copy it now.</p>
+          <p>Each till or canteen device gets its own key. The key is shown once, so copy it right away.</p>
         </div>
         <div className="card-body">
           <form className="row" onSubmit={submit} style={{ alignItems: 'flex-end' }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>Terminal label</label>
-              <input className="input" placeholder="e.g. Canteen Till 1" value={label} onChange={(e) => setLabel(e.target.value)} />
+              <label htmlFor="term-label">Terminal label</label>
+              <input
+                id="term-label"
+                className="input"
+                placeholder="e.g. Canteen Till 1"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+              />
             </div>
-            <button className="btn btn-primary" disabled={register.isPending || !label}>
+            <button className="btn btn-primary" disabled={register.isPending || !label.trim()}>
               {register.isPending ? 'Registering…' : 'Register'}
             </button>
           </form>
+
           {newKey && (
-            <div className="keybox">
-              <strong>API key for “{newKey.label}”</strong> — store it on the device now; it can't be shown again.
-              <code>{newKey.apiKey}</code>
+            <div className="keybox" role="alert">
+              <div className="keybox-title">
+                <IconAlert className="ic" /> API key for “{newKey.label}”
+              </div>
+              <p>
+                Store this on the device now. For security it can never be shown again; if it's
+                lost, register the terminal afresh.
+              </p>
+              <div className="keybox-code">
+                <code>{newKey.apiKey}</code>
+                <CopyButton text={newKey.apiKey} />
+              </div>
+              <div className="row" style={{ marginTop: 10 }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => setNewKey(null)}>
+                  I've stored it, dismiss
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
 
       <div className="card">
-        <div className="card-head">
+        <div className="card-head row">
           <h2>Terminals</h2>
+          <span className="spacer" />
+          <button className="icon-btn" onClick={() => void q.refetch()} aria-label="Refresh" title="Refresh">
+            <IconRefresh className="ic" />
+          </button>
         </div>
         {q.isLoading ? (
-          <div className="empty">Loading…</div>
+          <SkeletonRows rows={3} />
+        ) : q.isError ? (
+          <ErrorState onRetry={() => void q.refetch()} />
         ) : (q.data?.terminals.length ?? 0) === 0 ? (
-          <div className="empty">No terminals registered yet.</div>
+          <EmptyState
+            icon={IconTerminals}
+            title="No terminals yet"
+            hint="Register your first till above. The canteen is a great place to start."
+          />
         ) : (
           <div className="table-wrap">
             <table className="table">
               <thead>
-                <tr><th>Label</th><th>Status</th><th>Registered</th></tr>
+                <tr>
+                  <th>Label</th>
+                  <th>Status</th>
+                  <th>Registered</th>
+                </tr>
               </thead>
               <tbody>
                 {q.data?.terminals.map((t) => (
@@ -74,7 +111,9 @@ export function Terminals({ orgId }: { orgId: string }): JSX.Element {
                       <span className={`dot ${t.status === 'active' ? 'dot-active' : 'dot-idle'}`} />{' '}
                       <span className="kind">{t.status}</span>
                     </td>
-                    <td className="mono">{new Date(t.createdAt).toLocaleDateString('en-KE', { dateStyle: 'medium' })}</td>
+                    <td className="mono">
+                      {new Date(t.createdAt).toLocaleDateString('en-KE', { dateStyle: 'medium' })}
+                    </td>
                   </tr>
                 ))}
               </tbody>

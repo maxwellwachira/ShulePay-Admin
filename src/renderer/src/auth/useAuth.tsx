@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     })();
   }, []);
 
-  // On a 401 (e.g. the token expired), drop the session — the app returns to login.
+  // On a 401 (e.g. the token expired), drop the session - the app returns to login.
   useEffect(() => {
     setOnUnauthorized(() => {
       void window.shulepay.auth.clear();

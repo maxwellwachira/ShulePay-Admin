@@ -5,7 +5,7 @@ import { join } from 'node:path';
 /**
  * Access-token storage encrypted at rest with the OS keychain (Keychain / DPAPI /
  * libsecret) via Electron's safeStorage. The token NEVER goes to the renderer or
- * localStorage — the renderer asks the main process to attach it to requests.
+ * localStorage - the renderer asks the main process to attach it to requests.
  */
 const tokenFile = (): string => join(app.getPath('userData'), 'auth.bin');
 

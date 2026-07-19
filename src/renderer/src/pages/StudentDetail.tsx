@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, formatKes, ApiError } from '@renderer/api/client';
 import { Modal } from '@renderer/components/Modal';
 import { useToast } from '@renderer/components/Toast';
+import { SkeletonRows, ErrorState } from '@renderer/components/ui';
 
 export function StudentDetail({
   memberId,
@@ -21,7 +22,7 @@ export function StudentDetail({
   const setLimit = useMutation({
     mutationFn: () => api.setLimit(memberId, period, Math.round(Number(cap) * 100)),
     onSuccess: () => {
-      toast.push('ok', `${period} limit set to KES ${cap}`);
+      toast.push('ok', `${period === 'daily' ? 'Daily' : 'Weekly'} limit set to KES ${cap}`);
       setCap('');
       void qc.invalidateQueries({ queryKey: ['member', memberId] });
     },
@@ -32,16 +33,28 @@ export function StudentDetail({
 
   return (
     <Modal title={d ? d.name : 'Student'} onClose={onClose}>
-      {q.isLoading || !d ? (
-        <div className="empty">Loading…</div>
+      {q.isLoading ? (
+        <SkeletonRows rows={5} />
+      ) : q.isError || !d ? (
+        <ErrorState onRetry={() => void q.refetch()} />
       ) : (
         <>
-          <div className="big-balance">{formatKes(d.balanceCents)}</div>
-          <dl className="kv" style={{ marginTop: 14 }}>
+          <div className="row">
+            <div>
+              <div className="big-balance">{formatKes(d.balanceCents)}</div>
+              <div className="muted" style={{ fontSize: 12.5 }}>
+                wallet balance
+              </div>
+            </div>
+            <span className="spacer" />
+            <span className={`badge kind ${d.status === 'active' ? 'badge-ok' : 'badge-neutral'}`}>
+              {d.status}
+            </span>
+          </div>
+
+          <dl className="kv" style={{ marginTop: 18 }}>
             <dt>Admission no.</dt>
             <dd className="mono">{d.accountNumber}</dd>
-            <dt>Status</dt>
-            <dd className="kind">{d.status}</dd>
           </dl>
 
           <div className="subsection">
@@ -63,7 +76,7 @@ export function StudentDetail({
           <div className="subsection">
             <h3>Spending limits</h3>
             {d.limits.length === 0 ? (
-              <p className="muted">No limits set — unrestricted.</p>
+              <p className="muted">No limits set. This student can spend their full balance.</p>
             ) : (
               <dl className="kv">
                 {d.limits.map((l) => (
@@ -77,21 +90,32 @@ export function StudentDetail({
             <div className="limit-row" style={{ marginTop: 12 }}>
               <div className="field">
                 <label>Period</label>
-                <select className="input" value={period} onChange={(e) => setPeriod(e.target.value as 'daily' | 'weekly')}>
+                <select
+                  className="input"
+                  value={period}
+                  onChange={(e) => setPeriod(e.target.value as 'daily' | 'weekly')}
+                >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
                 </select>
               </div>
               <div className="field">
                 <label>Cap (KES)</label>
-                <input className="input" type="number" min="1" placeholder="e.g. 200" value={cap} onChange={(e) => setCap(e.target.value)} />
+                <input
+                  className="input"
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 200"
+                  value={cap}
+                  onChange={(e) => setCap(e.target.value)}
+                />
               </div>
               <button
                 className="btn btn-primary"
                 disabled={setLimit.isPending || !cap || Number(cap) <= 0}
                 onClick={() => setLimit.mutate()}
               >
-                Set
+                {setLimit.isPending ? 'Setting…' : 'Set'}
               </button>
             </div>
           </div>
