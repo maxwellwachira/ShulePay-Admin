@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { IPC, type AppConfig, type ApiRequest } from '@shared/bridge';
+import { IPC, type AppConfig, type ApiRequest, type ReaderStatus } from '@shared/bridge';
 import { setToken, getToken, clearToken } from './tokenStore';
 import { fingerprintReader } from './device/fingerprint';
 import { apiRequest } from './api';
@@ -20,6 +20,7 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.authClear, () => clearToken());
 
   ipcMain.handle(IPC.fingerprintCapture, () => fingerprintReader.capture());
+  ipcMain.handle(IPC.fingerprintStatus, (): Promise<ReaderStatus> => fingerprintReader.status());
 
   ipcMain.handle(IPC.appGetConfig, (): AppConfig => ({
     apiBaseUrl: process.env.SHULEPAY_API_URL ?? 'http://localhost:3000',

@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'node:path';
 import { registerIpc } from './ipc';
+import { fingerprintReader } from './device/fingerprint';
 
 /**
  * Main process. Security posture (Electron hardening best practices):
@@ -51,4 +52,8 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', () => {
+  void fingerprintReader.dispose();
 });
