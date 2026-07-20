@@ -18,14 +18,38 @@
   "build": {
     "appId": "ke.shulepay.admin",
     "productName": "ShulePay Admin",
-    "directories": { "output": "release", "buildResources": "build-resources" },
-    "files": ["out/**/*", "package.json"],
-    "mac": { "category": "public.app-category.business", "target": ["dmg"] },
-    "win": { "target": ["nsis"] },
-    "linux": { "target": ["AppImage"], "category": "Office" }
+    "directories": {
+      "output": "release",
+      "buildResources": "build-resources"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/koffi/**"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office"
+    }
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.62.0"
+    "@tanstack/react-query": "^5.62.0",
+    "koffi": "^2.16.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

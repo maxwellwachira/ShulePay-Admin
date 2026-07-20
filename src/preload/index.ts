@@ -17,6 +17,7 @@ const bridge: ShulePayBridge = {
   },
   fingerprint: {
     capture: () => ipcRenderer.invoke(IPC.fingerprintCapture),
+    status: () => ipcRenderer.invoke(IPC.fingerprintStatus),
   },
   app: {
     getConfig: () => ipcRenderer.invoke(IPC.appGetConfig),

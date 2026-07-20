@@ -154,6 +154,11 @@ export const api = {
       `/v1/members/${memberId}/biometrics`,
       { method: 'POST', body },
     ),
+
+  // Payment authorization (identify + charge) is NOT in this admin client: those routes
+  // (POST /v1/pos/identify, POST /v1/pos/purchases) are TERMINAL-authenticated (terminal
+  // API key), not admin-bearer-token. They belong to the till app — see README for the
+  // captured contract. This app captures templates (fingerprint.capture) and enrolls them.
 };
 
 /** Format integer cents as "KES 1,234.50". */
