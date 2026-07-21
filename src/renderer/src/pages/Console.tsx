@@ -6,6 +6,7 @@ import { EmptyState } from '@renderer/components/ui';
 import { IconStaff } from '@renderer/components/icons';
 import { Overview } from './Overview';
 import { Students } from './Students';
+import { StudentPage } from './StudentPage';
 import { Onboard } from './Onboard';
 import { Staff } from './Staff';
 import { Transactions } from './Transactions';
@@ -33,23 +34,32 @@ const NARROW_VIEWS: View[] = ['onboard', 'settings'];
 export function Console(): JSX.Element {
   const { me } = useAuth();
   const [view, setView] = useState<View>('overview');
+  // Opening a student is a drill-down INTO the students view, not a view of its own:
+  // it keeps 'students' highlighted in the sidebar, and any nav click clears it.
+  const [student, setStudent] = useState<string | null>(null);
   const item = NAV_ITEMS.find((i) => i.view === view);
   const orgId = me?.orgId ?? null;
+
+  function navigate(v: View): void {
+    setStudent(null);
+    setView(v);
+  }
 
   // The till is not a page inside the console — it replaces it. A cashier on a busy
   // counter should have no sidebar to wander into and nothing to mis-tap.
   if (view === 'sell' && orgId) {
-    return <Till orgId={orgId} onExit={() => setView('overview')} />;
+    return <Till orgId={orgId} onExit={() => navigate('overview')} />;
   }
 
   return (
     <div className="shell">
-      <Sidebar active={view} onNavigate={setView} />
+      <Sidebar active={view} onNavigate={navigate} />
       <div className="main">
         <header className="topbar">
           <div>
-            <h1>{item?.title ?? ''}</h1>
-            {item?.subtitle && <div className="topbar-sub">{item.subtitle}</div>}
+            <h1>{student ? 'Student' : item?.title ?? ''}</h1>
+            {!student && item?.subtitle && <div className="topbar-sub">{item.subtitle}</div>}
+            {student && <div className="topbar-sub">Wallet, guardians, and activity</div>}
           </div>
           <span className="spacer" />
           {me?.org?.name && <span className="chip">{me.org.name}</span>}
@@ -58,10 +68,12 @@ export function Console(): JSX.Element {
           <div className={`content-inner ${NARROW_VIEWS.includes(view) ? 'narrow' : ''}`}>
             {!orgId ? (
               <NoOrg />
+            ) : student ? (
+              <StudentPage memberId={student} onBack={() => setStudent(null)} />
             ) : view === 'overview' ? (
-              <Overview orgId={orgId} onNavigate={setView} />
+              <Overview orgId={orgId} onNavigate={navigate} />
             ) : view === 'students' ? (
-              <Students orgId={orgId} onNavigate={setView} />
+              <Students orgId={orgId} onNavigate={navigate} onOpenStudent={setStudent} />
             ) : view === 'onboard' ? (
               <Onboard orgId={orgId} />
             ) : view === 'staff' ? (

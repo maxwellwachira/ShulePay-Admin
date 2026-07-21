@@ -92,6 +92,24 @@ export interface MemberDetail {
   guardians: { name: string | null; phone: string }[];
 }
 
+/** One student's wallet statement row. Amount is signed: + top-up, − purchase. */
+export interface MemberTxn {
+  id: string;
+  kind: string;
+  createdAt: string;
+  reference: string | null;
+  amountCents: number;
+  amountKes: string;
+}
+
+/** Metadata about an enrolled finger — never the template itself. */
+export interface EnrolledFinger {
+  fingerIndex: number;
+  quality: number;
+  consentVersion: string;
+  enrolledAt: string;
+}
+
 export interface StaffMember {
   id: string;
   name: string | null;
@@ -176,10 +194,27 @@ export const api = {
       `/v1/members/${memberId}/balance`,
     ),
 
-  setLimit: (memberId: string, period: 'daily' | 'weekly', capCents: number) =>
-    request<{ memberId: string; period: string; capCents: number }>(
-      `/v1/members/${memberId}/limits`,
-      { method: 'PUT', body: { period, capCents } },
+  memberTransactions: (memberId: string) =>
+    request<{ transactions: MemberTxn[] }>(`/v1/members/${memberId}/transactions`),
+
+  memberFingers: (memberId: string) =>
+    request<{ fingers: EnrolledFinger[] }>(`/v1/members/${memberId}/biometrics`),
+
+  linkGuardian: (memberId: string, phone: string, name?: string) =>
+    request<{ memberId: string; guardianUserId: string; phone: string }>(
+      `/v1/members/${memberId}/guardians`,
+      { method: 'POST', body: { phone, ...(name ? { name } : {}) } },
+    ),
+
+  /**
+   * Ask a payer to fund a student's wallet — an STK prompt to `phone` (a guardian, or
+   * whoever is paying for them today). This only STARTS the prompt: the payer still has
+   * to enter their PIN, and the wallet is credited when M-Pesa calls the backend back.
+   */
+  topupMember: (memberId: string, amountCents: number, phone: string) =>
+    request<{ status: string; checkoutRequestId: string; payerPhone: string }>(
+      `/v1/members/${memberId}/topup`,
+      { method: 'POST', body: { amountCents, phone } },
     ),
 
   listStaff: (orgId: string) => request<{ users: StaffMember[] }>(`/v1/orgs/${orgId}/users`),

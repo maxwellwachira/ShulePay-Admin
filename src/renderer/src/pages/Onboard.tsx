@@ -3,19 +3,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@renderer/api/client';
 import { useToast } from '@renderer/components/Toast';
 import { IconFingerprint, IconCheck } from '@renderer/components/icons';
+import { normalizePhone } from '@renderer/lib/phone';
 import type { CaptureResult } from '@shared/bridge';
 
 const CONSENT_VERSION = 'guardian-consent-2026-v1';
 const MIN_QUALITY = 40;
-
-/** Normalize a Kenyan phone number to 254XXXXXXXXX, or return null if invalid. */
-function normalizePhone(raw: string): string | null {
-  const s = raw.replace(/[\s\-+]/g, '');
-  if (/^0[17]\d{8}$/.test(s)) return `254${s.slice(1)}`;
-  if (/^254[17]\d{8}$/.test(s)) return s;
-  if (/^[17]\d{8}$/.test(s)) return `254${s}`;
-  return null;
-}
 
 type Step = 1 | 2 | 3;
 
