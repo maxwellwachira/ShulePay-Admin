@@ -2,6 +2,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, pos, formatKes, type Product } from '@renderer/api/client';
 import { SkeletonRows, ErrorState, EmptyState } from '@renderer/components/ui';
+import { Modal } from '@renderer/components/Modal';
 import { IconSearch, IconReceipt, IconFingerprint, IconRefresh } from '@renderer/components/icons';
 import type { ReaderStatus, TerminalIdentity } from '@shared/bridge';
 import { cartReducer, cartTotal, cartCount, type CartEntry } from './cart';
@@ -22,6 +23,7 @@ export function Till({ orgId, onExit }: { orgId: string; onExit: () => void }): 
   const [entries, dispatch] = useReducer(cartReducer, []);
   const [query, setQuery] = useState('');
   const [charging, setCharging] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -96,10 +98,14 @@ export function Till({ orgId, onExit }: { orgId: string; onExit: () => void }): 
   return (
     <div className="till">
       <header className="till-bar">
-        <div className="till-bar-id">
+        <button
+          className="till-bar-id"
+          onClick={() => setSwitching(true)}
+          title="Change which till this device is"
+        >
           <span className="dot dot-active" aria-hidden="true" />
           <strong>{identity.label}</strong>
-        </div>
+        </button>
         <span className="spacer" />
         <ReaderChip reader={reader} />
         <button
@@ -218,6 +224,43 @@ export function Till({ orgId, onExit }: { orgId: string; onExit: () => void }): 
           onRefreshCatalog={() => void catalog.refetch()}
           onNeedsPairing={() => setIdentity(null)}
         />
+      )}
+
+      {switching && (
+        <Modal title="Change till" onClose={() => setSwitching(false)}>
+          <p>
+            This device is paired as <strong>{identity.label}</strong>. Unpairing forgets
+            its key so you can set it up as a different till.
+          </p>
+          <div className="notice notice-warn">
+            The old key cannot be recovered — the backend shows a terminal's key once. To
+            come back to “{identity.label}”, you'd pair this device afresh under that name.
+            Sales already rung up are unaffected.
+          </div>
+          {count > 0 && (
+            <div className="notice notice-err">
+              There {count === 1 ? 'is 1 item' : `are ${count} items`} in the current sale.
+              Unpairing will discard it.
+            </div>
+          )}
+          <div className="row" style={{ marginTop: 18 }}>
+            <button
+              className="btn btn-danger"
+              onClick={() => {
+                void window.shulepay.terminal.unpair().then(() => {
+                  dispatch({ type: 'clear' });
+                  setSwitching(false);
+                  setIdentity(null); // drops straight to the pairing screen
+                });
+              }}
+            >
+              Unpair this device
+            </button>
+            <button className="btn btn-ghost" onClick={() => setSwitching(false)}>
+              Keep {identity.label}
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );

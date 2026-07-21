@@ -552,7 +552,13 @@ button, input, select { font-family: inherit; font-size: inherit; }
   display: flex; align-items: center; gap: 12px; flex: none;
   padding: 12px 18px; background: var(--navy-800); color: #fff;
 }
-.till-bar-id { display: flex; align-items: center; gap: 9px; font-size: 15px; }
+.till-bar-id {
+  display: flex; align-items: center; gap: 9px; font-size: 15px;
+  padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer;
+  background: transparent; border: 1px solid transparent; color: inherit; font-family: inherit;
+  transition: background 0.12s, border-color 0.12s;
+}
+.till-bar-id:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.18); }
 .till-bar .btn-ghost { color: var(--accent-sky); }
 .till-bar .btn-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
 .till-bar .icon-btn { color: var(--navy-ink); }
