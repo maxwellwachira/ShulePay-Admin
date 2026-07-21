@@ -22,11 +22,27 @@ export interface AppConfig {
   apiBaseUrl: string;
 }
 
+/** Which till this device is paired as. Never includes the key itself. */
+export interface TerminalIdentity {
+  id: string;
+  label: string;
+  orgId: string;
+}
+
 export interface ApiRequest {
   path: string;
   method?: string;
   body?: unknown;
-  auth?: boolean; // default true; main injects the bearer token
+  /**
+   * Which credential the main process attaches:
+   *   `true` / omitted - the signed-in user's bearer token
+   *   `false`          - none (login)
+   *   `'terminal'`     - this device's POS terminal key, as `X-Terminal-Key`
+   *
+   * The POS routes are authenticated as a DEVICE, not a person, so selling needs the
+   * terminal credential even though a user is signed in at the same time.
+   */
+  auth?: boolean | 'terminal';
 }
 export interface ApiResponse {
   ok: boolean;
@@ -47,6 +63,19 @@ export interface ThumbPayBridge {
     setToken(token: string): Promise<void>;
     getToken(): Promise<string | null>;
     clear(): Promise<void>;
+  };
+  /**
+   * This device's POS terminal credential. Pairing happens entirely in main: it
+   * registers the terminal with the user's admin token and stores the returned key,
+   * so the key is never handed to the renderer even once.
+   */
+  terminal: {
+    /** Which till this device is, or null if it has never been paired. */
+    identity(): Promise<TerminalIdentity | null>;
+    /** Register this device as a new till for the org and store its key. */
+    pair(orgId: string, label: string): Promise<TerminalIdentity>;
+    /** Forget the credential — the device stops being a till until paired again. */
+    unpair(): Promise<void>;
   };
   /** Fingerprint reader - native SDK runs in main; renderer only gets a template. */
   fingerprint: {
@@ -70,6 +99,9 @@ export const IPC = {
   authSetToken: 'auth:setToken',
   authGetToken: 'auth:getToken',
   authClear: 'auth:clear',
+  terminalIdentity: 'terminal:identity',
+  terminalPair: 'terminal:pair',
+  terminalUnpair: 'terminal:unpair',
   fingerprintCapture: 'fingerprint:capture',
   fingerprintStatus: 'fingerprint:status',
   appGetConfig: 'app:getConfig',
