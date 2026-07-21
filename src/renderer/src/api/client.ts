@@ -15,7 +15,7 @@ export class ApiError extends Error {
 interface RequestOptions {
   method?: string;
   body?: unknown;
-  auth?: boolean; // default true
+  auth?: boolean | 'terminal'; // default true (the signed-in user's bearer token)
 }
 
 // When an authenticated request returns 401 (e.g. the token expired), the app signs
@@ -34,7 +34,10 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   });
   const data = res.data as { error?: { code?: string; message?: string } };
   if (!res.ok) {
-    if (res.status === 401 && opts.auth !== false) onUnauthorized?.();
+    // Only a USER 401 means the session died. A terminal 401 means this device isn't
+    // paired (or its key was revoked) — signing the cashier out over that would be
+    // both wrong and maddening mid-queue.
+    if (res.status === 401 && opts.auth !== false && opts.auth !== 'terminal') onUnauthorized?.();
     throw new ApiError(res.status, data?.error?.code ?? 'error', data?.error?.message ?? 'Request failed');
   }
   return res.data as T;
@@ -104,6 +107,49 @@ export interface Terminal {
   createdAt: string;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  priceCents: number;
+  priceKes: string;
+  category: string | null;
+  status: 'active' | 'archived';
+  sortOrder: number;
+}
+
+/** What a till sends up: what was tapped, never what it costs. */
+export interface CartLine {
+  productId: string;
+  quantity: number;
+}
+
+export interface IdentifiedStudent {
+  memberId: string;
+  accountNumber: string;
+  name: string;
+  score: number;
+}
+
+export interface PurchaseResult {
+  status: string;
+  idempotent: boolean;
+  memberId: string;
+  balanceCents: number;
+  balanceKes: string;
+  reference?: string;
+  items?: { productId: string; name: string; quantity: number; lineTotalCents: number }[];
+}
+
+export interface PurchaseInput {
+  amountCents: number;
+  idempotencyKey: string;
+  items?: CartLine[];
+  reference?: string;
+  // Exactly one of these identifies the student.
+  fingerprintTemplate?: string;
+  accountNumber?: string;
+}
+
 export const api = {
   login: (phone: string, password: string) =>
     request<LoginResponse>('/v1/auth/login', { method: 'POST', body: { phone, password }, auth: false }),
@@ -123,6 +169,12 @@ export const api = {
     ),
 
   memberDetail: (memberId: string) => request<MemberDetail>(`/v1/members/${memberId}`),
+
+  /** Just the wallet balance — used by the till to preview a charge before it happens. */
+  memberBalance: (memberId: string) =>
+    request<{ memberId: string; balanceCents: number; balanceKes: string }>(
+      `/v1/members/${memberId}/balance`,
+    ),
 
   setLimit: (memberId: string, period: 'daily' | 'weekly', capCents: number) =>
     request<{ memberId: string; period: string; capCents: number }>(
@@ -155,10 +207,62 @@ export const api = {
       { method: 'POST', body },
     ),
 
-  // Payment authorization (identify + charge) is NOT in this admin client: those routes
-  // (POST /v1/pos/identify, POST /v1/pos/purchases) are TERMINAL-authenticated (terminal
-  // API key), not admin-bearer-token. They belong to the till app — see README for the
-  // captured contract. This app captures templates (fingerprint.capture) and enrolls them.
+  // --- Catalog (admin-authenticated) ---
+
+  listProducts: (orgId: string, includeArchived = false) =>
+    request<{ products: Product[] }>(
+      `/v1/orgs/${orgId}/products${includeArchived ? '?includeArchived=true' : ''}`,
+    ),
+
+  createProduct: (
+    orgId: string,
+    body: { name: string; priceCents: number; category?: string | null; sortOrder?: number },
+  ) => request<Product>(`/v1/orgs/${orgId}/products`, { method: 'POST', body }),
+
+  updateProduct: (
+    orgId: string,
+    productId: string,
+    patch: {
+      name?: string;
+      priceCents?: number;
+      category?: string | null;
+      status?: 'active' | 'archived';
+      sortOrder?: number;
+    },
+  ) =>
+    request<Product>(`/v1/orgs/${orgId}/products/${productId}`, {
+      method: 'PATCH',
+      body: patch,
+    }),
+};
+
+/**
+ * Selling. These routes authenticate the DEVICE (`X-Terminal-Key`), not the signed-in
+ * user, so they only work once this machine has been paired as a till — the main
+ * process holds the key and attaches it; it never reaches this code.
+ */
+export const pos = {
+  /** The till's own copy of the price list, so a shift can start without an admin. */
+  catalog: () => request<{ products: Product[] }>('/v1/pos/catalog', { auth: 'terminal' }),
+
+  /** Resolve a fingerprint to a student so the cashier can confirm before charging. */
+  identify: (fingerprintTemplate: string) =>
+    request<IdentifiedStudent>('/v1/pos/identify', {
+      method: 'POST',
+      body: { fingerprintTemplate },
+      auth: 'terminal',
+    }),
+
+  /**
+   * Charge the sale. `idempotencyKey` must be minted ONCE per sale and reused across
+   * retries: that is what makes a timed-out request safe to send again.
+   */
+  purchase: (body: PurchaseInput) =>
+    request<PurchaseResult>('/v1/pos/purchases', {
+      method: 'POST',
+      body,
+      auth: 'terminal',
+    }),
 };
 
 /** Format integer cents as "KES 1,234.50". */

@@ -1,21 +1,28 @@
 import type { ApiRequest, ApiResponse } from '@shared/bridge';
 import { getToken } from './tokenStore';
+import { getTerminalKey } from './terminalStore';
 
 /**
- * Backend HTTP from the main process. No browser/CORS constraints, and the bearer
- * token is read from the OS keychain here and attached - the renderer never sees it.
+ * Backend HTTP from the main process. No browser/CORS constraints, and credentials are
+ * read from the OS keychain here and attached - the renderer never sees either the
+ * bearer token or the terminal key.
  *
  * Failures never reject the IPC promise: network errors and timeouts are mapped to a
  * structured { ok: false, status: 0 } response so the renderer can show a friendly
  * offline message instead of an opaque IPC error.
  */
-const baseUrl = (): string => process.env.SHULEPAY_API_URL ?? 'http://localhost:3000';
+export const baseUrl = (): string => process.env.SHULEPAY_API_URL ?? 'http://localhost:3000';
 
 const REQUEST_TIMEOUT_MS = 20_000;
 
 export async function apiRequest(req: ApiRequest): Promise<ApiResponse> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (req.auth !== false) {
+  if (req.auth === 'terminal') {
+    // POS routes authenticate the device. If this machine was never paired there is no
+    // key to send; the backend's 401 is what the Till screen turns into "pair me".
+    const key = getTerminalKey();
+    if (key) headers['X-Terminal-Key'] = key;
+  } else if (req.auth !== false) {
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }

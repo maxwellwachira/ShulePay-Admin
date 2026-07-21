@@ -11,7 +11,9 @@ import { Staff } from './Staff';
 import { Transactions } from './Transactions';
 import { Reports } from './Reports';
 import { Terminals } from './Terminals';
+import { Items } from './Items';
 import { Settings } from './Settings';
+import { Till } from '@renderer/pos/Till';
 
 function NoOrg(): JSX.Element {
   return (
@@ -33,6 +35,12 @@ export function Console(): JSX.Element {
   const [view, setView] = useState<View>('overview');
   const item = NAV_ITEMS.find((i) => i.view === view);
   const orgId = me?.orgId ?? null;
+
+  // The till is not a page inside the console — it replaces it. A cashier on a busy
+  // counter should have no sidebar to wander into and nothing to mis-tap.
+  if (view === 'sell' && orgId) {
+    return <Till orgId={orgId} onExit={() => setView('overview')} />;
+  }
 
   return (
     <div className="shell">
@@ -64,6 +72,8 @@ export function Console(): JSX.Element {
               <Reports orgId={orgId} />
             ) : view === 'terminals' ? (
               <Terminals orgId={orgId} />
+            ) : view === 'items' ? (
+              <Items orgId={orgId} />
             ) : (
               <Settings />
             )}

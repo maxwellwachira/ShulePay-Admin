@@ -8,6 +8,7 @@ import {
   IconChart,
   IconTerminals,
   IconSettings,
+  IconZap,
 } from './icons';
 
 export type View =
@@ -15,6 +16,8 @@ export type View =
   | 'students'
   | 'onboard'
   | 'staff'
+  | 'sell'
+  | 'items'
   | 'transactions'
   | 'reports'
   | 'terminals'
@@ -25,7 +28,7 @@ export interface NavItem {
   label: string;
   title: string;
   subtitle: string;
-  group: 'School' | 'Finance' | 'Admin';
+  group: 'School' | 'Selling' | 'Finance' | 'Admin';
   icon: ComponentType<{ className?: string }>;
 }
 
@@ -34,10 +37,12 @@ export const NAV_ITEMS: NavItem[] = [
   { view: 'students', label: 'Students', title: 'Students', subtitle: 'Every onboarded student and their wallet', group: 'School', icon: IconStudents },
   { view: 'onboard', label: 'Onboard student', title: 'Onboard a student', subtitle: 'Details, guardian, then fingerprint in three quick steps', group: 'School', icon: IconOnboard },
   { view: 'staff', label: 'Staff', title: 'Staff & permissions', subtitle: 'Who can use this console, and at what level', group: 'School', icon: IconStaff },
+  { view: 'sell', label: 'Open till', title: 'Till', subtitle: 'Sell to students by fingerprint', group: 'Selling', icon: IconZap },
+  { view: 'items', label: 'Items', title: 'Items & prices', subtitle: 'What the canteen sells, and for how much', group: 'Selling', icon: IconReceipt },
   { view: 'transactions', label: 'Transactions', title: 'Transactions', subtitle: 'Top-ups, purchases, and withdrawals across the school', group: 'Finance', icon: IconReceipt },
   { view: 'reports', label: 'Reports', title: 'Reports & insights', subtitle: 'How money moves through your school', group: 'Finance', icon: IconChart },
   { view: 'terminals', label: 'Terminals', title: 'POS terminals', subtitle: 'The devices students tap their fingers on', group: 'Finance', icon: IconTerminals },
   { view: 'settings', label: 'Settings', title: 'Settings', subtitle: 'School profile, your account, and app info', group: 'Admin', icon: IconSettings },
 ];
 
-export const NAV_GROUPS = ['School', 'Finance', 'Admin'] as const;
+export const NAV_GROUPS = ['School', 'Selling', 'Finance', 'Admin'] as const;

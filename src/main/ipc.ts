@@ -1,6 +1,14 @@
 import { ipcMain } from 'electron';
-import { IPC, type AppConfig, type ApiRequest, type ReaderStatus } from '@shared/bridge';
+import {
+  IPC,
+  type AppConfig,
+  type ApiRequest,
+  type ReaderStatus,
+  type TerminalIdentity,
+} from '@shared/bridge';
 import { setToken, getToken, clearToken } from './tokenStore';
+import { getTerminalIdentity, clearTerminal } from './terminalStore';
+import { pairTerminal } from './pairing';
 import { fingerprintReader } from './device/fingerprint';
 import { apiRequest } from './api';
 
@@ -18,6 +26,15 @@ export function registerIpc(): void {
   });
   ipcMain.handle(IPC.authGetToken, () => getToken());
   ipcMain.handle(IPC.authClear, () => clearToken());
+
+  ipcMain.handle(IPC.terminalIdentity, (): TerminalIdentity | null => getTerminalIdentity());
+  ipcMain.handle(IPC.terminalPair, (_e, orgId: unknown, label: unknown) => {
+    if (typeof orgId !== 'string' || typeof label !== 'string' || label.trim().length === 0) {
+      throw new Error('invalid pairing request');
+    }
+    return pairTerminal(orgId, label.trim());
+  });
+  ipcMain.handle(IPC.terminalUnpair, () => clearTerminal());
 
   ipcMain.handle(IPC.fingerprintCapture, () => fingerprintReader.capture());
   ipcMain.handle(IPC.fingerprintStatus, (): Promise<ReaderStatus> => fingerprintReader.status());

@@ -15,6 +15,11 @@ const bridge: ShulePayBridge = {
     getToken: () => ipcRenderer.invoke(IPC.authGetToken),
     clear: () => ipcRenderer.invoke(IPC.authClear),
   },
+  terminal: {
+    identity: () => ipcRenderer.invoke(IPC.terminalIdentity),
+    pair: (orgId, label) => ipcRenderer.invoke(IPC.terminalPair, orgId, label),
+    unpair: () => ipcRenderer.invoke(IPC.terminalUnpair),
+  },
   fingerprint: {
     capture: () => ipcRenderer.invoke(IPC.fingerprintCapture),
     status: () => ipcRenderer.invoke(IPC.fingerprintStatus),
