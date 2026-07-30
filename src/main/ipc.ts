@@ -23,6 +23,6 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.fingerprintStatus, (): Promise<ReaderStatus> => fingerprintReader.status());
 
   ipcMain.handle(IPC.appGetConfig, (): AppConfig => ({
-    apiBaseUrl: process.env.SHULEPAY_API_URL ?? 'http://localhost:3000',
+    apiBaseUrl: process.env.THUMBPAY_API_URL ?? 'http://localhost:3000',
   }));
 }

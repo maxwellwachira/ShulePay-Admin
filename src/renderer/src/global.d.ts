@@ -1,8 +1,8 @@
-import type { ShulePayBridge } from '@shared/bridge';
+import type { ThumbPayBridge } from '@shared/bridge';
 
 declare global {
   interface Window {
-    shulepay: ShulePayBridge;
+    thumbpay: ThumbPayBridge;
   }
 }
 

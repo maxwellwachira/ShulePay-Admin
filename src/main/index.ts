@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'node:path';
 import { registerIpc } from './ipc';
@@ -16,7 +17,7 @@ function createWindow(): void {
     height: 832,
     minWidth: 1000,
     minHeight: 640,
-    title: 'ShulePay Admin',
+    title: 'ThumbPay Admin',
     backgroundColor: '#f6f8fb',
     show: false,
     autoHideMenuBar: true,

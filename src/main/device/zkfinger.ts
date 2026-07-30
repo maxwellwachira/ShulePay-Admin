@@ -37,7 +37,7 @@ interface ZkfpBinding {
 
 /** Bind the vendor library, or return a reason string if it can't be loaded. */
 function bind(): ZkfpBinding | string {
-  const libPath = env.SHULEPAY_ZKFINGER_LIB ?? defaultLibName();
+  const libPath = env.THUMBPAY_ZKFINGER_LIB ?? defaultLibName();
   let lib: ReturnType<typeof koffi.load>;
   try {
     lib = koffi.load(libPath);

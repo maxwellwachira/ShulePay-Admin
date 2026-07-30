@@ -4,9 +4,9 @@ import { ApiError } from '@renderer/api/client';
 import { Logo } from '@renderer/components/Logo';
 import { IconEye, IconEyeOff, IconFingerprint, IconShield, IconZap } from '@renderer/components/icons';
 
-const SUPPORT_EMAIL = 'support@shulepay.com';
+const SUPPORT_EMAIL = 'support@thumbpay.com';
 
-export function Login(): JSX.Element {
+export function Login({ onTestFingerprint }: { onTestFingerprint: () => void }): JSX.Element {
   const { login } = useAuth();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +33,7 @@ export function Login(): JSX.Element {
         <div className="auth-card">
           <Logo size={44} />
           <h1 className="auth-title">Welcome back</h1>
-          <p className="auth-sub">Sign in to your school's ShulePay console</p>
+          <p className="auth-sub">Sign in to your school's ThumbPay console</p>
           <form onSubmit={onSubmit}>
             <div className="field">
               <label htmlFor="phone">Phone number</label>
@@ -88,8 +88,18 @@ export function Login(): JSX.Element {
               Contact us
             </a>
           </p>
+          <p className="auth-foot">
+            <button
+              type="button"
+              className="link"
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+              onClick={onTestFingerprint}
+            >
+              Test fingerprint reader
+            </button>
+          </p>
         </div>
-        <p className="auth-legal">© 2026 ShulePay · Secure school payments</p>
+        <p className="auth-legal">© 2026 ThumbPay · Secure school payments</p>
       </div>
 
       <div className="auth-brand" aria-hidden="true">

@@ -1,12 +1,12 @@
 /* ============================================================================
-   ShulePay Admin - design system
-   Light content surface + deep-navy brand sidebar. Brand: #033B95.
+   ThumbPay Admin - design system
+   Light content surface + deep-navy brand sidebar. Brand: #0644AA.
    ========================================================================== */
 :root {
   /* Brand */
-  --primary: #033b95;
-  --primary-600: #0a4bb8;
-  --primary-700: #052f73;
+  --primary: #0644aa;
+  --primary-600: #0e56cc;
+  --primary-700: #083988;
   --primary-soft: #eaf0fb;
   --primary-soft-2: #f4f8fe;
   --accent-sky: #7fb1ff;
@@ -37,7 +37,7 @@
   --warning-soft: #fbf1e3;
 
   /* Charts (single-series brand hue; grid is one step off surface) */
-  --chart-bar: #0a4bb8;
+  --chart-bar: #0e56cc;
   --chart-bar-soft: #cfdff7;
   --chart-grid: #eef1f6;
 
@@ -48,7 +48,7 @@
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
   --shadow: 0 4px 16px rgba(16, 24, 40, 0.08);
   --shadow-lg: 0 16px 40px rgba(16, 24, 40, 0.14);
-  --ring: 0 0 0 3px rgba(3, 59, 149, 0.18);
+  --ring: 0 0 0 3px rgba(6, 68, 170, 0.18);
 
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
@@ -70,7 +70,7 @@ button, input, select { font-family: inherit; font-size: inherit; }
   display: grid; place-items: center; color: #fff; font-weight: 800;
   border-radius: 11px;
   background: linear-gradient(135deg, var(--primary), var(--primary-600));
-  box-shadow: 0 4px 12px rgba(3, 59, 149, 0.28);
+  box-shadow: 0 4px 12px rgba(6, 68, 170, 0.28);
   flex: none;
 }
 .logo-mark span { line-height: 1; }
@@ -238,7 +238,7 @@ button, input, select { font-family: inherit; font-size: inherit; }
   justify-content: flex-end; padding: 56px;
   background:
     radial-gradient(900px 600px at 85% -10%, rgba(127, 177, 255, 0.28), transparent 60%),
-    radial-gradient(700px 500px at -10% 110%, rgba(10, 75, 184, 0.55), transparent 60%),
+    radial-gradient(700px 500px at -10% 110%, rgba(14, 86, 204, 0.55), transparent 60%),
     linear-gradient(160deg, var(--navy-700), var(--navy-900));
   color: #fff;
 }

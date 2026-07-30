@@ -105,7 +105,7 @@ export function Onboard({ orgId }: { orgId: string }): JSX.Element {
   async function scan(): Promise<void> {
     setScanning(true);
     try {
-      setCapture(await window.shulepay.fingerprint.capture());
+      setCapture(await window.thumbpay.fingerprint.capture());
     } catch {
       toast.push('err', 'Could not reach the fingerprint reader. Check the device and try again.');
     } finally {

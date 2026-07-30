@@ -1,4 +1,4 @@
-/** Typed client for the ShulePay backend. Requests are performed by the MAIN process
+/** Typed client for the ThumbPay backend. Requests are performed by the MAIN process
  * (via the bridge) - no browser CORS, and the token is injected there, never held in
  * the renderer. */
 
@@ -26,7 +26,7 @@ export function setOnUnauthorized(fn: (() => void) | null): void {
 }
 
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const res = await window.shulepay.api.request({
+  const res = await window.thumbpay.api.request({
     path,
     ...(opts.method ? { method: opts.method } : {}),
     ...(opts.body !== undefined ? { body: opts.body } : {}),

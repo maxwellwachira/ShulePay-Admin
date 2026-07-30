@@ -9,7 +9,7 @@ import { getToken } from './tokenStore';
  * structured { ok: false, status: 0 } response so the renderer can show a friendly
  * offline message instead of an opaque IPC error.
  */
-const baseUrl = (): string => process.env.SHULEPAY_API_URL ?? 'http://localhost:3000';
+const baseUrl = (): string => process.env.THUMBPAY_API_URL ?? 'http://localhost:3000';
 
 const REQUEST_TIMEOUT_MS = 20_000;
 
@@ -38,7 +38,7 @@ export async function apiRequest(req: ApiRequest): Promise<ApiResponse> {
           code: timedOut ? 'timeout' : 'network',
           message: timedOut
             ? 'The server took too long to respond. Try again.'
-            : 'Could not reach the ShulePay server. Check your internet connection.',
+            : 'Could not reach the ThumbPay server. Check your internet connection.',
         },
       },
     };

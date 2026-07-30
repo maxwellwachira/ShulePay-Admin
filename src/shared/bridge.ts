@@ -1,7 +1,7 @@
 /**
  * The typed contract for the ONLY surface the renderer can touch in the main process.
  * Shared by main (implements), preload (exposes via contextBridge), and renderer
- * (consumes as `window.shulepay`). Keep it minimal - every method here is privileged.
+ * (consumes as `window.thumbpay`). Keep it minimal - every method here is privileged.
  */
 
 export interface CaptureResult {
@@ -34,7 +34,7 @@ export interface ApiResponse {
   data: unknown;
 }
 
-export interface ShulePayBridge {
+export interface ThumbPayBridge {
   /**
    * All backend HTTP goes through the MAIN process (Node) - no browser CORS, and the
    * token is injected in main so it never reaches the renderer.

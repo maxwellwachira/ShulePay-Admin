@@ -1,7 +1,7 @@
-# ShulePay Admin (Desktop)
+# ThumbPay Admin (Desktop)
 
 Desktop app for the onboarding/customer-care desk: create students, enroll fingerprints
-on the reader, and view balances. Talks to the [ShulePay backend](../shulepay).
+on the reader, and view balances. Talks to the [ThumbPay backend](../thumbpay).
 
 Electron + React + TypeScript, built with **electron-vite**.
 
@@ -10,7 +10,7 @@ Electron + React + TypeScript, built with **electron-vite**.
 - **`contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`** — the renderer
   is a plain web page with no Node/Electron access.
 - The renderer reaches the OS only through a **minimal, typed preload bridge**
-  (`window.shulepay`) defined once in [`src/shared/bridge.ts`](src/shared/bridge.ts).
+  (`window.thumbpay`) defined once in [`src/shared/bridge.ts`](src/shared/bridge.ts).
 - The **access token lives in the OS keychain** (Electron `safeStorage`) in the main
   process — never in the renderer, JS state, or `localStorage`.
 - The **fingerprint reader** runs in the **main process** (native/USB access) behind a
@@ -31,9 +31,9 @@ The device seam picks a reader per platform:
 The real reader binds the vendor `libzkfp` C API through **koffi** (an FFI with
 ABI-stable N-API prebuilds, so it loads under Electron with no native rebuild). Install
 ZKTeco's **ZKFinger Reader SDK** on the target machine; if the library isn't on the
-system search path, point `SHULEPAY_ZKFINGER_LIB` at it (see [`.env.example`](.env.example)).
+system search path, point `THUMBPAY_ZKFINGER_LIB` at it (see [`.env.example`](.env.example)).
 When the driver or device is missing, `fingerprint.status()` reports `connected: false`
-with a reason instead of crashing. Set `SHULEPAY_FORCE_SIMULATED_READER=1` to force the
+with a reason instead of crashing. Set `THUMBPAY_FORCE_SIMULATED_READER=1` to force the
 stub on any platform.
 
 > The `libzkfp` FFI signatures in `zkfinger.ts` follow ZKFinger's documented C API but
@@ -55,7 +55,7 @@ The **backend** does the 1:N match (scoped, with a threshold + separation margin
 templates stay server-side). This repo's reusable building block for that flow is the
 device **`capture()`** — the same call feeds enrollment here and verify at the till.
 
-> ⚠️ **Backend matcher is still a byte-exact stub** ([`../shulepay` `matcher.ts`](../shulepay/src/modules/biometric/matcher.ts)):
+> ⚠️ **Backend matcher is still a byte-exact stub** ([`../thumbpay` `matcher.ts`](../thumbpay/src/modules/biometric/matcher.ts)):
 > it only matches identical template bytes. Two real scans of the same finger differ, so
 > real-hardware payment auth needs a **vendor (ZKFinger) matcher swapped into the backend**
 > `matcher.ts` first. Enrollment works today; end-to-end verify does not until that lands.
@@ -77,13 +77,13 @@ src/
 
 ```bash
 npm install
-cp .env.example .env          # SHULEPAY_API_URL -> your backend
+cp .env.example .env          # THUMBPAY_API_URL -> your backend
 npm run dev                   # launch the app (backend should be running)
 ```
 
 Sign in with an admin created on the backend
 (`npm run admin:create -- <phone> <password>` there), then onboard a student and enroll
-a fingerprint. On macOS (or with `SHULEPAY_FORCE_SIMULATED_READER=1`) the reader is
+a fingerprint. On macOS (or with `THUMBPAY_FORCE_SIMULATED_READER=1`) the reader is
 simulated; on Windows/Linux with the ZKFinger SDK installed it uses the real ZK9500.
 
 ## Scripts

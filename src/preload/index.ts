@@ -1,12 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC, type ShulePayBridge } from '@shared/bridge';
+import { IPC, type ThumbPayBridge } from '@shared/bridge';
 
 /**
  * The preload runs in an isolated context and is the ONLY code that can talk to both
- * Electron and the page. It exposes a small, typed API on `window.shulepay` - no raw
+ * Electron and the page. It exposes a small, typed API on `window.thumbpay` - no raw
  * ipcRenderer, no Node - so the renderer can never reach anything not listed here.
  */
-const bridge: ShulePayBridge = {
+const bridge: ThumbPayBridge = {
   api: {
     request: (req) => ipcRenderer.invoke(IPC.apiRequest, req),
   },
@@ -24,4 +24,4 @@ const bridge: ShulePayBridge = {
   },
 };
 
-contextBridge.exposeInMainWorld('shulepay', bridge);
+contextBridge.exposeInMainWorld('thumbpay', bridge);

@@ -1,9 +1,9 @@
 {
-  "name": "shulepay-admin",
+  "name": "thumbpay-admin",
   "version": "0.1.0",
   "private": true,
-  "description": "ShulePay Admin — desktop app for onboarding students, biometric enrollment, and reports.",
-  "author": "ShulePay",
+  "description": "ThumbPay Admin — desktop app for onboarding students, biometric enrollment, and reports.",
+  "author": "ThumbPay",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -16,8 +16,8 @@
     "dist": "npm run build && electron-builder"
   },
   "build": {
-    "appId": "ke.shulepay.admin",
-    "productName": "ShulePay Admin",
+    "appId": "ke.thumbpay.admin",
+    "productName": "ThumbPay Admin",
     "directories": {
       "output": "release",
       "buildResources": "build-resources"
@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
+    "dotenv": "^16.6.1",
     "koffi": "^2.16.2"
   },
   "devDependencies": {
@@ -67,6 +68,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.0.2",
+    "tsx": "^4.23.1",
     "typescript": "^5.7.2",
     "vite": "^5.4.11"
   }

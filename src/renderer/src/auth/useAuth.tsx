@@ -17,12 +17,12 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
   // Restore a session on launch: if a token is in the keychain, load the profile.
   useEffect(() => {
     void (async () => {
-      const token = await window.shulepay.auth.getToken();
+      const token = await window.thumbpay.auth.getToken();
       if (token) {
         try {
           setMe(await api.me());
         } catch {
-          await window.shulepay.auth.clear();
+          await window.thumbpay.auth.clear();
         }
       }
       setLoading(false);
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
   // On a 401 (e.g. the token expired), drop the session - the app returns to login.
   useEffect(() => {
     setOnUnauthorized(() => {
-      void window.shulepay.auth.clear();
+      void window.thumbpay.auth.clear();
       setMe(null);
     });
     return () => setOnUnauthorized(null);
@@ -40,12 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
 
   const login = async (phone: string, password: string): Promise<void> => {
     const res = await api.login(phone, password);
-    await window.shulepay.auth.setToken(res.accessToken);
+    await window.thumbpay.auth.setToken(res.accessToken);
     setMe(await api.me());
   };
 
   const logout = async (): Promise<void> => {
-    await window.shulepay.auth.clear();
+    await window.thumbpay.auth.clear();
     setMe(null);
   };
 

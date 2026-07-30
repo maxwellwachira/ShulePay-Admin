@@ -23,11 +23,11 @@ export interface FingerprintReader {
  *    status() if the driver or device is missing, rather than faking captures).
  *  - macOS / anything else → the simulated reader, since ZKTeco ships no driver there.
  *
- * Set SHULEPAY_FORCE_SIMULATED_READER=1 to force the stub on any platform (useful for
+ * Set THUMBPAY_FORCE_SIMULATED_READER=1 to force the stub on any platform (useful for
  * demos on a Windows/Linux box without the reader plugged in).
  */
 function selectReader(): FingerprintReader {
-  const forceStub = env.SHULEPAY_FORCE_SIMULATED_READER === '1';
+  const forceStub = env.THUMBPAY_FORCE_SIMULATED_READER === '1';
   const supported = platform === 'win32' || platform === 'linux';
   return !forceStub && supported ? new ZkFingerReader() : new StubReader();
 }

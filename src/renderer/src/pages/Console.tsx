@@ -19,7 +19,7 @@ function NoOrg(): JSX.Element {
       <EmptyState
         icon={IconStaff}
         title="No school linked to this account"
-        hint="Your sign-in works, but it isn't scoped to a school yet. Ask a ShulePay super-admin to link your account to your organization."
+        hint="Your sign-in works, but it isn't scoped to a school yet. Ask a ThumbPay super-admin to link your account to your organization."
       />
     </div>
   );

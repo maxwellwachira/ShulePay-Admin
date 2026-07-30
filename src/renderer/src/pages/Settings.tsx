@@ -3,7 +3,7 @@ import { useAuth } from '@renderer/auth/useAuth';
 
 export function Settings(): JSX.Element {
   const { me, logout } = useAuth();
-  const config = useQuery({ queryKey: ['appConfig'], queryFn: () => window.shulepay.app.getConfig() });
+  const config = useQuery({ queryKey: ['appConfig'], queryFn: () => window.thumbpay.app.getConfig() });
 
   return (
     <div className="stack">

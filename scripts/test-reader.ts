@@ -7,7 +7,7 @@
  *
  * macOS                    → simulated reader (ZKTeco ships no macOS driver).
  * Windows/Linux + ZK9500   → real captures via the ZKFinger SDK. If the driver isn't on
- *                            the system path, set SHULEPAY_ZKFINGER_LIB first.
+ *                            the system path, set THUMBPAY_ZKFINGER_LIB first.
  */
 import { fingerprintReader } from '../src/main/device/fingerprint';
 

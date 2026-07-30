@@ -68,7 +68,7 @@ export function Transactions({ orgId }: { orgId: string }): JSX.Element {
           <EmptyState
             icon={IconReceipt}
             title="No transactions yet"
-            hint="Top-ups and purchases will land here in real time once students start using ShulePay."
+            hint="Top-ups and purchases will land here in real time once students start using ThumbPay."
           />
         ) : (
           <EmptyState icon={IconReceipt} title="Nothing matches" hint="Try a different type or search." />
