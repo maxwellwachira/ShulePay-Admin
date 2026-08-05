@@ -41,7 +41,8 @@
     "publish": {
       "provider": "github",
       "owner": "maxwellwachira",
-      "repo": "ShulePay-Admin"
+      "repo": "ShulePay-Admin",
+      "draft": false
     }
   },
   "dependencies": {
