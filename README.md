@@ -5,6 +5,15 @@ on the reader, and view balances. Talks to the [ThumbPay backend](../thumbpay).
 
 Electron + React + TypeScript, built with **electron-vite**.
 
+## Download
+
+Grab the latest Windows installer from the
+**[Releases page](https://github.com/maxwellwachira/ShulePay-Admin/releases/latest)** —
+download `ThumbPay Admin-Setup-<version>.exe` and run it. It's an unsigned installer, so
+Windows SmartScreen will show an "unknown publisher" warning on first run — click
+**More info → Run anyway**. The app checks for updates on launch and installs them
+in the background (see [Releasing a new version](#releasing-a-new-version)).
+
 ## Security posture (Electron hardening)
 
 - **`contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`** — the renderer
@@ -94,3 +103,26 @@ simulated; on Windows/Linux with the ZKFinger SDK installed it uses the real ZK9
 | `npm run build` | Typecheck + build the production app |
 | `npm run typecheck` | Type-check main+preload and renderer separately |
 | `npm run lint` | Lint |
+| `npm run dist` | Build a local, unpublished Windows installer into `release/` |
+| `npm run release` | Build **and publish** the installer to GitHub Releases (used by CI, see below) |
+
+## Releasing a new version
+
+Pushing a `v*` tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
+which builds the Windows installer on `windows-latest` and publishes it — plus the
+`latest.yml` feed `electron-updater` reads — to a GitHub Release, using the repo's
+built-in `GITHUB_TOKEN` (no secrets to configure).
+
+```bash
+npm version patch   # bumps package.json, commits, tags v0.1.1
+git push && git push --tags
+```
+
+The tag must match `v${version}` in `package.json` — `npm version` handles both in one
+step. Installed copies check for updates on launch and prompt to restart once one's
+downloaded; nothing else to do.
+
+> No code-signing cert is wired up, so installs/updates show an "unknown publisher"
+> warning. Fine for internal/small-scale distribution; if that needs to go away, a
+> Windows code-signing certificate + `win.certificateFile`/`certificatePassword` (or
+> CI secrets) would need to be added to the `build` config.

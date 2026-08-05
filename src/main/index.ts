@@ -3,6 +3,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'node:path';
 import { registerIpc } from './ipc';
 import { fingerprintReader } from './device/fingerprint';
+import { initAutoUpdate } from './autoUpdate';
 
 /**
  * Main process. Security posture (Electron hardening best practices):
@@ -46,6 +47,7 @@ function createWindow(): void {
 app.whenReady().then(() => {
   registerIpc();
   createWindow();
+  initAutoUpdate();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

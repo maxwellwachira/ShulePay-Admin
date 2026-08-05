@@ -13,7 +13,8 @@
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "lint": "eslint . --max-warnings 0",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "release": "npm run build && electron-builder --win --publish always"
   },
   "build": {
     "appId": "ke.thumbpay.admin",
@@ -29,27 +30,24 @@
     "asarUnpack": [
       "**/node_modules/koffi/**"
     ],
-    "mac": {
-      "category": "public.app-category.business",
-      "target": [
-        "dmg"
-      ]
-    },
     "win": {
       "target": [
         "nsis"
       ]
     },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "category": "Office"
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "maxwellwachira",
+      "repo": "ShulePay-Admin"
     }
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
     "dotenv": "^16.6.1",
+    "electron-updater": "^6.8.9",
     "koffi": "^2.16.2"
   },
   "devDependencies": {
