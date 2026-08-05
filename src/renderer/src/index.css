@@ -420,6 +420,7 @@ button, input, select { font-family: inherit; font-size: inherit; }
 .notice-ok { background: var(--success-soft); color: var(--success); }
 .notice-info { background: var(--primary-soft); color: var(--primary); }
 .notice-err { background: var(--danger-soft); color: var(--danger); }
+.notice-warn { background: var(--warning-soft); color: var(--warning); }
 
 .form-grid { display: flex; flex-direction: column; gap: 16px; }
 .form-grid.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }

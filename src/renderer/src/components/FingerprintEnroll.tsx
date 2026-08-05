@@ -11,6 +11,10 @@ const MIN_QUALITY = 40;
 /**
  * Scan pad + consent + enroll, shared by the onboarding wizard (fresh capture) and the
  * student detail view (enrolling later for a student who skipped it, or re-enrolling).
+ *
+ * Once a scan has been enrolled, re-scanning is gated behind an explicit "Replace
+ * fingerprint" step — swapping an enrolled print is what actually lets a payment be
+ * authorized against a different finger, so it shouldn't be a single accidental tap.
  */
 export function FingerprintEnroll({
   memberId,
@@ -26,6 +30,8 @@ export function FingerprintEnroll({
   const [capture, setCapture] = useState<CaptureResult | null>(null);
   const [scanning, setScanning] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [justEnrolled, setJustEnrolled] = useState(false);
+  const [confirmingReplace, setConfirmingReplace] = useState(false);
 
   const enroll = useMutation({
     mutationFn: () => {
@@ -41,6 +47,8 @@ export function FingerprintEnroll({
     onSuccess: () => {
       setCapture(null);
       setConsent(false);
+      setJustEnrolled(true);
+      setConfirmingReplace(false);
       onEnrolled?.();
     },
     onError: (e) => toast.push('err', e instanceof ApiError ? e.message : 'Enrollment failed'),
@@ -59,8 +67,41 @@ export function FingerprintEnroll({
 
   const goodQuality = (capture?.quality ?? 0) >= MIN_QUALITY;
 
+  if (justEnrolled && !confirmingReplace) {
+    return (
+      <div className="stack">
+        <div className="notice notice-ok">
+          <IconCheck className="ic" /> Fingerprint enrolled.
+        </div>
+        <div className="row">
+          <button type="button" className="btn btn-ghost" onClick={() => setConfirmingReplace(true)}>
+            Replace fingerprint
+          </button>
+          {secondaryAction && (
+            <button type="button" className="btn btn-ghost" onClick={secondaryAction.onClick}>
+              {secondaryAction.label}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="stack">
+      {confirmingReplace && (
+        <div className="notice notice-warn">
+          Replacing an enrolled fingerprint is a security-sensitive change: it changes whose finger
+          can pay from this account. As a safeguard, this will send a confirmation OTP to the
+          parent/guardian's phone.
+          <div className="row" style={{ marginTop: 8 }}>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setConfirmingReplace(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="scanpad">
         <div className={`scan-visual ${scanning ? 'scanning' : capture ? 'captured' : ''}`} aria-hidden="true">
           {capture && !scanning ? <IconCheck className="ic" /> : <IconFingerprint className="ic" />}
