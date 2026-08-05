@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { api, formatKes } from '@renderer/api/client';
 import { SkeletonRows, ErrorState, EmptyState } from '@renderer/components/ui';
 import { IconStudents, IconRefresh } from '@renderer/components/icons';
-import { StudentDetail } from './StudentDetail';
 import type { View } from '@renderer/components/nav';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -11,14 +10,15 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 export function Students({
   orgId,
   onNavigate,
+  onOpenStudent,
 }: {
   orgId: string;
   onNavigate: (v: View) => void;
+  onOpenStudent: (memberId: string) => void;
 }): JSX.Element {
   const q = useQuery({ queryKey: ['students', orgId], queryFn: () => api.listStudents(orgId) });
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
-  const [selected, setSelected] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -97,7 +97,7 @@ export function Students({
             </thead>
             <tbody>
               {filtered.map((m) => (
-                <tr key={m.id} className="clickable" onClick={() => setSelected(m.id)}>
+                <tr key={m.id} className="clickable" onClick={() => onOpenStudent(m.id)}>
                   <td className="strong">{m.name}</td>
                   <td className="mono">{m.accountNumber}</td>
                   <td>
@@ -111,8 +111,6 @@ export function Students({
           </table>
         </div>
       )}
-
-      {selected && <StudentDetail memberId={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
