@@ -1,6 +1,6 @@
 {
   "name": "thumbpay-admin",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "description": "ThumbPay Admin — desktop app for onboarding students, biometric enrollment, and reports.",
   "author": "ThumbPay",
