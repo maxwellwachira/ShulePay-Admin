@@ -27,6 +27,12 @@
       "out/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "resources/zkfinger",
+        "to": "zkfinger"
+      }
+    ],
     "asarUnpack": [
       "**/node_modules/koffi/**"
     ],
@@ -36,7 +42,9 @@
       ]
     },
     "nsis": {
-      "artifactName": "ThumbPay-Admin-Setup.${ext}"
+      "artifactName": "ThumbPay-Admin-Setup.${ext}",
+      "perMachine": true,
+      "include": "build-resources/installer.nsh"
     },
     "publish": {
       "provider": "github",

@@ -10,8 +10,11 @@ Electron + React + TypeScript, built with **electron-vite**.
 **[Download the latest installer](https://github.com/maxwellwachira/ShulePay-Admin/releases/latest/download/ThumbPay-Admin-Setup.exe)**
 — a direct link that always resolves to the current release (`ThumbPay-Admin-Setup.exe`,
 same name every version). It's an unsigned installer, so Windows SmartScreen will show
-an "unknown publisher" warning on first run — click **More info → Run anyway**. The app
-checks for updates on launch and installs them in the background (see
+an "unknown publisher" warning on first run — click **More info → Run anyway**. The
+installer bundles the ZKTeco fingerprint reader's driver and asks to run as administrator
+to install it — that's expected, not a red flag (see
+[Fingerprint reader](#fingerprint-reader-zkteco-zk9500) below). The app checks for
+updates on launch and installs them in the background (see
 [Releasing a new version](#releasing-a-new-version)).
 
 ## Security posture (Electron hardening)
@@ -38,12 +41,25 @@ The device seam picks a reader per platform:
 | macOS | Simulated ([`stub.ts`](src/main/device/stub.ts)) | ZKTeco ships no macOS driver — captures are fabricated so the UI is still testable |
 
 The real reader binds the vendor `libzkfp` C API through **koffi** (an FFI with
-ABI-stable N-API prebuilds, so it loads under Electron with no native rebuild). Install
-ZKTeco's **ZKFinger Reader SDK** on the target machine; if the library isn't on the
-system search path, point `THUMBPAY_ZKFINGER_LIB` at it (see [`.env.example`](.env.example)).
-When the driver or device is missing, `fingerprint.status()` reports `connected: false`
-with a reason instead of crashing. Set `THUMBPAY_FORCE_SIMULATED_READER=1` to force the
-stub on any platform.
+ABI-stable N-API prebuilds, so it loads under Electron with no native rebuild).
+
+**Packaged Windows builds are self-contained**: [`resources/zkfinger/`](resources/zkfinger)
+bundles `libzkfp.dll` and its sensor-capture plugins, plus the `zkusbdevices` USB driver
+package (built on libusb-win32). `electron-builder`'s `extraResources` config ships them
+inside the installer, and [`build-resources/installer.nsh`](build-resources/installer.nsh)
+silently runs `pnputil /add-driver` during setup — which is why the installer is
+`perMachine` and requests admin. Nothing to install separately; a school PC just needs
+the installer run once. [`zkfinger.ts`](src/main/device/zkfinger.ts)'s `defaultLibName()`
+points at the bundled DLL for packaged builds and falls back to the system search path
+in dev (point `THUMBPAY_ZKFINGER_LIB` at a local SDK install there — see
+[`.env.example`](.env.example)). When the driver or device is missing, `fingerprint.status()`
+reports `connected: false` with a reason instead of crashing. Set
+`THUMBPAY_FORCE_SIMULATED_READER=1` to force the stub on any platform.
+
+> The bundled driver/DLLs were pulled from an existing ZKFinger SDK install rather than
+> ZKTeco's official installer package directly — swap in the canonical files from
+> ZKTeco's own SDK download if you obtain them, to be sure of getting what their
+> installer actually ships.
 
 > The `libzkfp` FFI signatures in `zkfinger.ts` follow ZKFinger's documented C API but
 > have **not** been run against physical hardware in this repo — verify capture on a real

@@ -1,4 +1,6 @@
 import { platform, env } from 'node:process';
+import { join } from 'node:path';
+import { app } from 'electron';
 import * as koffi from 'koffi';
 import type { CaptureResult, ReaderStatus } from '@shared/bridge';
 import type { FingerprintReader } from './fingerprint';
@@ -88,7 +90,16 @@ function bind(): ZkfpBinding | string {
   };
 }
 
+/**
+ * A packaged Windows build bundles its own copy of libzkfp (see resources/zkfinger/)
+ * rather than relying on a system-wide SDK install, so it always has a copy to load
+ * regardless of what the search path finds. Dev builds fall back to the system path,
+ * matching a developer's own local SDK install.
+ */
 function defaultLibName(): string {
+  if (platform === 'win32' && app.isPackaged) {
+    return join(process.resourcesPath, 'zkfinger', 'lib', 'libzkfp.dll');
+  }
   return platform === 'win32' ? 'libzkfp.dll' : 'libzkfp.so';
 }
 
