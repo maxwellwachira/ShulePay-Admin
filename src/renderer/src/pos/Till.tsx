@@ -27,8 +27,8 @@ export function Till({ orgId, onExit }: { orgId: string; onExit: () => void }): 
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void window.shulepay.terminal.identity().then(setIdentity);
-    void window.shulepay.fingerprint.status().then(setReader);
+    void window.thumbpay.terminal.identity().then(setIdentity);
+    void window.thumbpay.fingerprint.status().then(setReader);
   }, []);
 
   const paired = identity != null;
@@ -247,7 +247,7 @@ export function Till({ orgId, onExit }: { orgId: string; onExit: () => void }): 
             <button
               className="btn btn-danger"
               onClick={() => {
-                void window.shulepay.terminal.unpair().then(() => {
+                void window.thumbpay.terminal.unpair().then(() => {
                   dispatch({ type: 'clear' });
                   setSwitching(false);
                   setIdentity(null); // drops straight to the pairing screen

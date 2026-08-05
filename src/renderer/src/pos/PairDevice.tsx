@@ -26,7 +26,7 @@ export function PairDevice({
     setBusy(true);
     setError(null);
     try {
-      onPaired(await window.shulepay.terminal.pair(orgId, label.trim()));
+      onPaired(await window.thumbpay.terminal.pair(orgId, label.trim()));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not pair this device.');
     } finally {

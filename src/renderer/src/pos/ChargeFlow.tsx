@@ -63,7 +63,7 @@ export function ChargeFlow({
   async function scan(): Promise<void> {
     setStage({ name: 'scanning' });
     try {
-      const capture = await window.shulepay.fingerprint.capture();
+      const capture = await window.thumbpay.fingerprint.capture();
       const student = await identifyThenPreview(capture.template);
       setStage({ name: 'confirm', payer: student });
     } catch (err) {
