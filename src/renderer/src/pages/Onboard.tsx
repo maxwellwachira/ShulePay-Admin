@@ -2,11 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@renderer/api/client';
 import { useToast } from '@renderer/components/Toast';
-import { IconFingerprint, IconCheck } from '@renderer/components/icons';
-import type { CaptureResult } from '@shared/bridge';
-
-const CONSENT_VERSION = 'guardian-consent-2026-v1';
-const MIN_QUALITY = 40;
+import { IconCheck } from '@renderer/components/icons';
+import { FingerprintEnroll } from '@renderer/components/FingerprintEnroll';
 
 /** Normalize a Kenyan phone number to 254XXXXXXXXX, or return null if invalid. */
 function normalizePhone(raw: string): string | null {
@@ -52,9 +49,6 @@ export function Onboard({ orgId }: { orgId: string }): JSX.Element {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [student, setStudent] = useState<{ id: string; name: string; accountNumber: string } | null>(null);
-  const [capture, setCapture] = useState<CaptureResult | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [consent, setConsent] = useState(false);
   const [enrolled, setEnrolled] = useState(false);
 
   const onboard = useMutation({
@@ -73,24 +67,6 @@ export function Onboard({ orgId }: { orgId: string }): JSX.Element {
     onError: (e) => toast.push('err', e instanceof ApiError ? e.message : 'Onboarding failed'),
   });
 
-  const enroll = useMutation({
-    mutationFn: () => {
-      if (!student || !capture) throw new Error('capture first');
-      return api.enrollFingerprint(student.id, {
-        fingerIndex: 1,
-        template: capture.template,
-        quality: capture.quality,
-        consent,
-        consentVersion: CONSENT_VERSION,
-      });
-    },
-    onSuccess: () => {
-      setEnrolled(true);
-      setStep(3);
-    },
-    onError: (e) => toast.push('err', e instanceof ApiError ? e.message : 'Enrollment failed'),
-  });
-
   function submitDetails(e: FormEvent): void {
     e.preventDefault();
     const errors: Record<string, string> = {};
@@ -102,17 +78,6 @@ export function Onboard({ orgId }: { orgId: string }): JSX.Element {
     if (Object.keys(errors).length === 0 && phone) onboard.mutate(phone);
   }
 
-  async function scan(): Promise<void> {
-    setScanning(true);
-    try {
-      setCapture(await window.thumbpay.fingerprint.capture());
-    } catch {
-      toast.push('err', 'Could not reach the fingerprint reader. Check the device and try again.');
-    } finally {
-      setScanning(false);
-    }
-  }
-
   function reset(): void {
     setStep(1);
     setName('');
@@ -121,12 +86,8 @@ export function Onboard({ orgId }: { orgId: string }): JSX.Element {
     setGuardianName('');
     setFieldErrors({});
     setStudent(null);
-    setCapture(null);
-    setConsent(false);
     setEnrolled(false);
   }
-
-  const goodQuality = (capture?.quality ?? 0) >= MIN_QUALITY;
 
   return (
     <div className="card">
@@ -201,61 +162,14 @@ export function Onboard({ orgId }: { orgId: string }): JSX.Element {
               their fingerprint so they can pay at the till.
             </div>
 
-            <div className="scanpad">
-              <div
-                className={`scan-visual ${scanning ? 'scanning' : capture ? 'captured' : ''}`}
-                aria-hidden="true"
-              >
-                {capture && !scanning ? <IconCheck className="ic" /> : <IconFingerprint className="ic" />}
-              </div>
-              <div className="scan-status" role="status">
-                {scanning
-                  ? 'Scanning. Ask the student to hold their finger on the reader…'
-                  : capture
-                    ? goodQuality
-                      ? 'Good capture. You can enroll or re-scan.'
-                      : 'Capture quality is too low. Clean the finger and reader, then re-scan.'
-                    : 'Place the student’s right index finger on the reader.'}
-              </div>
-              <div className="row">
-                <button
-                  type="button"
-                  className={capture ? 'btn btn-secondary' : 'btn btn-primary'}
-                  onClick={() => void scan()}
-                  disabled={scanning}
-                >
-                  {scanning ? 'Scanning…' : capture ? 'Re-scan' : 'Scan fingerprint'}
-                </button>
-                {capture && !scanning && (
-                  <span className={`quality-pill ${goodQuality ? 'badge-ok' : 'badge-warn'}`}>
-                    Quality {capture.quality}
-                    {!goodQuality && ' · too low'}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <label className="checkbox">
-              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-              <span>
-                The parent or guardian has consented to biometric enrollment for school payments
-                <span className="muted"> ({CONSENT_VERSION})</span>.
-              </span>
-            </label>
-
-            <div className="row">
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={enroll.isPending || !capture || !consent || !goodQuality || scanning}
-                onClick={() => enroll.mutate()}
-              >
-                {enroll.isPending ? 'Enrolling…' : 'Enroll fingerprint'}
-              </button>
-              <button type="button" className="btn btn-ghost" onClick={() => setStep(3)}>
-                Skip for now
-              </button>
-            </div>
+            <FingerprintEnroll
+              memberId={student.id}
+              secondaryAction={{ label: 'Skip for now', onClick: () => setStep(3) }}
+              onEnrolled={() => {
+                setEnrolled(true);
+                setStep(3);
+              }}
+            />
           </div>
         )}
 

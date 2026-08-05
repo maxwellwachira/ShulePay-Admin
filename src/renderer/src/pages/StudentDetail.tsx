@@ -4,6 +4,7 @@ import { api, formatKes, ApiError } from '@renderer/api/client';
 import { Modal } from '@renderer/components/Modal';
 import { useToast } from '@renderer/components/Toast';
 import { SkeletonRows, ErrorState } from '@renderer/components/ui';
+import { FingerprintEnroll } from '@renderer/components/FingerprintEnroll';
 
 export function StudentDetail({
   memberId,
@@ -71,6 +72,17 @@ export function StudentDetail({
                 ))}
               </dl>
             )}
+          </div>
+
+          <div className="subsection">
+            <h3>Fingerprint</h3>
+            <p className="muted" style={{ marginBottom: 10 }}>
+              Enroll or re-enroll a fingerprint, e.g. for a student who skipped it during onboarding.
+            </p>
+            <FingerprintEnroll
+              memberId={d.id}
+              onEnrolled={() => toast.push('ok', 'Fingerprint enrolled.')}
+            />
           </div>
 
           <div className="subsection">
