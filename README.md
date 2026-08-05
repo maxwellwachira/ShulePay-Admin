@@ -7,12 +7,12 @@ Electron + React + TypeScript, built with **electron-vite**.
 
 ## Download
 
-Grab the latest Windows installer from the
-**[Releases page](https://github.com/maxwellwachira/ShulePay-Admin/releases/latest)** —
-download `ThumbPay Admin-Setup-<version>.exe` and run it. It's an unsigned installer, so
-Windows SmartScreen will show an "unknown publisher" warning on first run — click
-**More info → Run anyway**. The app checks for updates on launch and installs them
-in the background (see [Releasing a new version](#releasing-a-new-version)).
+**[Download the latest installer](https://github.com/maxwellwachira/ShulePay-Admin/releases/latest/download/ThumbPay-Admin-Setup.exe)**
+— a direct link that always resolves to the current release (`ThumbPay-Admin-Setup.exe`,
+same name every version). It's an unsigned installer, so Windows SmartScreen will show
+an "unknown publisher" warning on first run — click **More info → Run anyway**. The app
+checks for updates on launch and installs them in the background (see
+[Releasing a new version](#releasing-a-new-version)).
 
 ## Security posture (Electron hardening)
 

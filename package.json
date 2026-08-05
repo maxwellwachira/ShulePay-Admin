@@ -36,7 +36,7 @@
       ]
     },
     "nsis": {
-      "artifactName": "${productName}-Setup-${version}.${ext}"
+      "artifactName": "ThumbPay-Admin-Setup.${ext}"
     },
     "publish": {
       "provider": "github",
